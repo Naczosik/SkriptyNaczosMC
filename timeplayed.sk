@@ -1,0 +1,48 @@
+#skript pokazujący i zczytujący czas gry gracza, pozwalający na pokazanie top listy oraz czasu gry wpisanego gracza, używany do czasu dodania pluginu ajleaderboards
+command /czasgry [<text>] [<offline player>]:
+    trigger:
+        if arg 1 is not set:
+            set {timeplayed::%player%} to time played of player
+            send "Przegrałeś %{timeplayed::%player%}%"
+        if arg 1 is "sprawdz":
+            if arg 2 is not set:
+                set {timeplayed::%player%} to time played of player
+                send "Przegrałeś %{timeplayed::%player%}%"
+                stop
+            if player is online:
+                set {timeplayed::%arg 2%} to time played of arg 2
+            send "Gracz %arg 2% przegrał: %{timeplayed::%arg 2%}%"
+        if arg 1 is "top":
+            loop all players:
+                set {timeplayed::%loop-player%} to time played of loop-player
+            loop {timeplayed::*}:
+                add 1 to {_size}
+                if {_low.to.high.list::%loop-value%} is not set:
+                    set {_low.to.high.list::%loop-value%} to loop-index
+                else:
+                    set {_n} to 0
+                    loop {_size} times:
+                        set {_n} to {_n}+1
+                        {_low.to.high.list::%loop-value-1%.%{_n}%} is not set
+                        set {_low.to.high.list::%loop-value-1%.%{_n}%} to loop-index
+                        stop loop
+            wait 1 tick
+            set {_n} to size of {_low.to.high.list::*}
+            loop {_low.to.high.list::*}:
+                set {_high.to.low.list::%{_n}%} to loop-value
+                set {_n} to {_n}-1
+            wait 1 tick
+            set {_i} to 0
+    #sekcja z neta THIS IS THE MESSAGE WITH TOP KILLS
+            send "&7&m-----------&8< &6Top10 &cCzas gry &8>&7&m-----------"
+            loop {_high.to.low.list::*}:
+                add 1 to {_topnumber}
+                set {_player} to "%loop-value%" parsed as offlineplayer
+                send "&f%{_topnumber}% - &6%{_player}% &8» &a%{timeplayed::%loop-value%}%"
+                add 1 to {_i}
+                if {_topnumber} > 9: #this is top 10 you can change it
+                    stop
+            send "&7&m------------------------------"
+        
+on join:
+    set {timeplayed::%player%} to time played of player

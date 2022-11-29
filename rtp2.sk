@@ -1,0 +1,61 @@
+#Random Teleport
+on rightclick on stone button:
+    block behind is bedrock:
+        set {_x} to random integer between 5000 and -5000
+        set {_y} to 256
+        set {_z} to random integer between -5000 and 5000
+        set {_xyz} to location at {_x}, {_y}, {_z}
+        teleport player to {_xyz}
+        wait a tick
+        loop 256 times:
+            if block under player is air:
+                teleport player under player
+            else:
+                stop loop
+        send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+        stop
+on rightclick on stone button:
+    block in front is bedrock:
+        set {_x} to random integer between 2000 and -2000
+        set {_y} to 256
+        set {_z} to random integer between -2000 and 2000
+        set {_xyz} to location at {_x}, {_y}, {_z}
+        teleport player to {_xyz}
+        wait a tick
+        loop 256 times:
+            if block under player is air:
+                teleport player under player
+            else:
+                stop loop
+        send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+        stop
+on rightclick on stone button:
+    block left is bedrock:
+        set {_x} to random integer between 2000 and -2000
+        set {_y} to 256
+        set {_z} to random integer between -2000 and 2000
+        set {_xyz} to location at {_x}, {_y}, {_z}
+        teleport player to {_xyz}
+        wait a tick
+        loop 256 times:
+            if block under player is air:
+                teleport player under player
+            else:
+                stop loop
+        send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+        stop
+on rightclick on stone button:
+    block right is bedrock:
+        set {_x} to random integer between 2000 and -2000
+        set {_y} to 256
+        set {_z} to random integer between -2000 and 2000
+        set {_xyz} to location at {_x}, {_y}, {_z}
+        teleport player to {_xyz}
+        wait a tick
+        loop 256 times:
+            if block under player is air:
+                teleport player under player
+            else:
+                stop loop
+        send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+        stop

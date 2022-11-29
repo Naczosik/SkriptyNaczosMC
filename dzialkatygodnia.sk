@@ -1,0 +1,79 @@
+#Plugin ogłaszający temat działki tygodnia oraz zbierający i usuwający zgłoszenia do cotygodniowego oceniania najlepszych działek na dany temat
+every 15 minutes:
+#    broadcast "&bTemat tygodnia"
+    broadcast "&f[&bNaczosMC&f] Zbuduj działke na dany temat, i zgłoś ją stojąc na niej &6/dzialkatygodnia zglos"
+    broadcast "&f[&bNaczosMC&f] Temat w tym tygodniu: &6%{temattygodnia}%"
+    broadcast "&f[&bNaczosMC&f] Najlepsze działki zostaną nagrodzone!"
+command /dzialkatygodnia [<text>]:
+    trigger:
+        if arg 1 is "zglos":
+            if {dzialkatygodnia::gracz::%player%} is set:
+                delete {dzialkatygodnia::gracz::%player%}
+                send "&f[&bNaczosMC&f] &aWycofano działkę."
+            else:
+                send "&f[&bNaczosMC&f] &aZgłoszono działkę w tym miejscu"
+                send "&f[&bNaczosMC&f] &aAby wycofać działkę, wpisz tę komendę ponownie."
+                set {dzialkatygodnia::gracz::%player%} to player's location
+        if arg 1 is "temat":
+        #    broadcast "&bTemat tygodnia"
+            send "&f[&bNaczosMC&f] Zbuduj działke na dany temat, i zgłoś ją stojąc na niej &6/dzialkatygodnia zglos"
+            send "&f[&bNaczosMC&f] Temat w tym tygodniu: &6%{temattygodnia}%"
+            send "&f[&bNaczosMC&f] Najlepsze działki zostaną nagrodzone!"
+        if arg 1 is not set:
+            send "&f[&bNaczosMC&f] Użycie &6/dzialkatygodnia temat/zglos"
+command /dzialkatygodniaadmin [<text>] [<text>]:
+    permission: dzialkatygodnia.admin
+    trigger:
+        if arg 1 is "tp":
+            if arg 2 is set:
+                set {_num} to arg 2 parsed as an integer
+                if {dzialkatygodnia::numer::%{_num}%} is set:
+                    loop {dzialkatygodnia::gracz::*}:
+                        if loop-value is {dzialkatygodnia::numer::%{_num}%}:
+                            set {_owner} to loop-index
+                    wait 1 tick
+                    teleport player to {dzialkatygodnia::numer::%arg 2%}
+                    send "&aDziałka zgłoszona przez &6%{_owner}%"
+                else:
+                    send "&cdziałka została wycofana"
+            else:
+                send "&cUżycie /dzialkatygodniaadmin tp numer"
+        if arg 1 is "reset":
+            delete {dzialkatygodnia::gracz::*}
+            delete {dzialkatygodnia::numer::*}
+            set {liczbadzialek} to 0
+            send "&aUsunąłeś listę działek"
+        if arg 1 is "ustawtemat":
+            set {temattygodnia} to arg 2
+            send "&aUstawiłeś temat tygodnia &6%{temattygodnia}%"
+        if arg 1 is "liczba":
+            send "&e&l%{liczbadzialek}%"
+        if arg 1 is "oglos":
+        #    broadcast "&bTemat tygodnia"
+            broadcast "&f[&bNaczosMC&f] Zbuduj działke na dany temat, i zgłoś ją stojąc na niej &6/dzialkatygodnia zglos"
+            broadcast "&f[&bNaczosMC&f] Temat w tym tygodniu: &6%{temattygodnia}%"
+            broadcast "&f[&bNaczosMC&f] Najlepsze działki zostaną nagrodzone!"
+        if arg 1 is not "tp" or "reset" or "ustawtemat" or "liczba" or "oglos":
+            send "&cUżycie /dzialkatygodniaadmin tp/reset/ustawtemat/liczba"
+        stop
+command /dzialkatygodniaadminnew [<text>] [<text>]:
+    permission: dzialkatygodnia.admin
+    trigger:
+        if arg 1 is "list":
+            send "&a============"
+            loop {dzialkatygodnia::gracz::*}:
+                send "&e%loop-index%"
+                add 1 to {_count}
+            send "&etotal: %{_count}%"
+            send "&a============"
+            stop
+        if arg 1 is "tp":
+            if arg 2 is set:
+                teleport player to {dzialkatygodnia::gracz::%arg 2%}
+                send "&ePrzeteleportowano..."
+                stop
+            else:
+                send "&eDopisz nick"
+                stop
+        else:
+            send "&e/dzialkatygodniaadminnew tp/list"

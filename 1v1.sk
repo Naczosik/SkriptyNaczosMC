@@ -1,0 +1,382 @@
+#Jeden z dłuższych projektów. Kod stworzony w 2020 roku, nie odświeżany od tamtego czasu, w tym momencie poprawiłbym te dziwne ify przez sprawdzanie odwrotnych stwierdzeń (np. 'if player's world is "1v1":' zamienił na sprawdzenie czy gracz nie jest w świecie '1v1' co w przypadku prawdy odsyłałoby wiadomość, że znajduje się w złym świecie i 'stop' który nie pozwalał dalszą egzekucje kodu, a oszczędziłoby wielokrotne tabowanie i zwiększyłoby przejrzystość kodu. Kod od 280 linijki był poprzednikiem 1v1, w aktualnej wersji nie działa.
+options:
+    prefix: &f[&b1v1&f]
+
+on load:
+    loop {1v1::walka::wgrze::*}:
+        teleport loop-value to {1v1::spawn::koniec}
+        clear loop-value's inventory
+    delete {1v1::kolejka::numer::*}
+    delete {1v1::kolejka::wkolejce::*}
+    delete {1v1::kolejka::liczbagraczy}
+    delete {1v1::walka::wgrze::*}
+    delete {1v1::pojedynekzzaproszenia}
+    delete {1v1::duel::zaproszenie::*}
+    set {1v1::arena} to "wolna"
+    set {1v1::graczewkolejce} to 0
+    broadcast "{@prefix} Przeładowano 1v1"
+    stop
+
+command /1v1:
+    permission: 1v1.gracz
+    permission message: Nie masz uprawnień!
+    trigger:
+        if player's world is "1v1":
+            if {1v1::kolejka::wkolejce::%player%} is not set:
+                if {1v1::walka::wgrze::%player%} is not set:
+                    if {1v1::graczewkolejce} < 0:
+                        set {1v1::graczewkolejce} to 0
+                    add 1 to {1v1::graczewkolejce}
+                    set {1v1::kolejka::numer::%player%} to {1v1::graczewkolejce}
+                    set {1v1::kolejka::wkolejce::%player%} to player
+                    wait 5 ticks
+                    if {1v1::graczewkolejce} is 1:
+                        if {1v1::arena} is "trwa":
+                            send "{@prefix} Arena jest zajęta"
+                            send "{@prefix} Jesteś jedynym graczem w kolejce"
+                            send "{@prefix} Oczekiwanie na drugiego gracza i wolną arene..."
+                        if {1v1::arena} is "wolna":
+                            send "{@prefix} Arena jest wolna, ale nie ma dla ciebie przeciwnika"
+                            send "{@prefix} Jesteś jedynym graczem w kolejce"
+                            send "{@prefix} Czekamy na drugiego gracza, nie opuszczaj lobby"
+                    if {1v1::graczewkolejce} is 2:
+                        if {1v1::arena} is "wolna":
+                            if {1v1::pojedynekzzaproszenia} is not set:
+                                make console execute command "/1v1start"
+                        else:
+                            send "{@prefix} Przeciwnik już czeka, czekamy na zwolnienie się areny"
+                            loop {1v1::kolejka::wkolejce::*}:
+                                if loop-value is player:
+                                    send "{@prefix} Znaleziono przeciwnika, czekamy na zwolnienie areny" to loop-value
+                    send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
+                    broadcast "{@prefix} Gracz &6%player% &fdołączył do kolejki &b1v1"
+                else:
+                    send "{@prefix} &cNie możesz dołączyć do kolejki podczas walki"
+            else:
+                send "{@prefix} &cJesteś już w kolejce"
+        else:
+            send "{@prefix} &cWejdź do lobby 1v1 &6/warp 1v1&c, aby móć walczyć na arenie 1v1"
+        stop
+
+command /1v1start:
+    permission: 1v1.admin
+    permission message: Nie masz uprawnień!
+    trigger:
+        if {1v1::graczewkolejce} >=2:
+            if {1v1::arena} is "wolna":
+                set {1v1::arena} to "trwa"
+                loop {1v1::kolejka::wkolejce::*}:
+                    if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
+                        send "{@prefix} &fArena rozpocznie się za &a3 &fsekundy" to loop-value
+                        play sound "BLOCK_NOTE_PLING" with volume 100 with pitch 1 at loop-value for loop-value
+                wait 3 seconds
+                loop {1v1::kolejka::wkolejce::*}:
+                    if {1v1::kolejka::numer::%loop-value%} is 1:
+                        teleport loop-value to {1v1::spawn::1}
+                        set {_gracz1} to loop-value
+                        heal {_gracz1}
+                        feed {_gracz1}
+                        clear {_gracz1}'s inventory
+                        clear potion effects of {_gracz1}
+                        wait 1 tick
+                        give netherite sword of sharpness 5 and unbreaking 3 to {_gracz1}
+                        give 2 splash potion of strong regeneration to {_gracz1}
+                        give 3 golden apple to {_gracz1}
+                        give 5 golden carrot to {_gracz1}
+                        equip {_gracz1} with diamond helmet of protection 4 and unbreaking 3
+                        equip {_gracz1} with diamond chestplate of protection 4 and unbreaking 3
+                        equip {_gracz1} with diamond leggings of protection 4 and unbreaking 3
+                        equip {_gracz1} with diamond boots of protection 4 and unbreaking 3 
+                        send "{@prefix} &cWALCZ!" to loop-value
+                        set {1v1::walka::wgrze::%loop-value%} to loop-value
+                        wait 1 tick
+                        delete {1v1::kolejka::wkolejce::%loop-value%}
+                        delete {1v1::kolejka::numer::%loop-value%}
+                    if {1v1::kolejka::numer::%loop-value%} is 2:
+                        teleport loop-value to {1v1::spawn::2}
+                        set {_gracz2} to loop-value
+                        heal {_gracz2}
+                        feed {_gracz2}
+                        clear {_gracz2}'s inventory
+                        clear potion effects of {_gracz2}
+                        wait 1 tick
+                        give netherite sword of sharpness 5 and unbreaking 3 to {_gracz2}
+                        give 2 splash potion of strong regeneration to {_gracz2}
+                        give 3 golden apple to {_gracz2}
+                        give 5 golden carrot to {_gracz2}
+                        equip {_gracz2} with diamond helmet of protection 4 and unbreaking 3
+                        equip {_gracz2} with diamond chestplate of protection 4 and unbreaking 3
+                        equip {_gracz2} with diamond leggings of protection 4 and unbreaking 3
+                        equip {_gracz2} with diamond boots of protection 4 and unbreaking 3 
+                        send "{@prefix} &cWALCZ!" to loop-value
+                        set {1v1::walka::wgrze::%loop-value%} to loop-value
+                        wait 1 tick
+                        delete {1v1::kolejka::wkolejce::%loop-value%}
+                        delete {1v1::kolejka::numer::%loop-value%}
+                reduce {1v1::graczewkolejce} by 2
+                loop {1v1::kolejka::wkolejce::*}:
+                    reduce {1v1::kolejka::numer::%loop-value%} by 2
+                    send "{@prefix} Twoje miejsce w kolejce: &6%{1v1::kolejka::numer::%loop-value%}%&f/&6%{1v1::graczewkolejce}%" to loop-value
+            stop
+
+command /1v1opusc:
+    permission: 1v1.gracz
+    permission message: Nie masz uprawnień!
+    trigger:
+        if {1v1::walka::wgrze::%player%} is set:
+            add 1 to {1v1::gracz::przegrane::%player%}
+            loop {1v1::walka::wgrze::*}:
+                teleport loop-value to {1v1::spawn::koniec}
+                clear loop-value's inventory
+            wait 1 tick
+            delete {1v1::walka::wgrze::%player%}
+            loop {1v1::walka::wgrze::*}:
+                set {_wygrany} to loop-value
+                #new
+                set {_zyciewygranego} to ((rounded up ({_wygrany}'s health*2))/2)
+                #set {_zyciewygranego} to rounded {_wygrany}'s health
+                broadcast "{@prefix} &a&l%loop-value% (❤ %{_zyciewygranego}%) &fwygrał pojedynek z &c&l%player%"
+                delete {1v1::walka::wgrze::%loop-value%}
+                add 1 to {1v1::gracz::wygrane::%loop-value%}
+            set {1v1::arena} to "wolna"
+            wait 3 seconds
+            make console execute command "/1v1start"
+        if {1v1::kolejka::wkolejce::%player%} is set:
+            loop {1v1::kolejka::wkolejce::*}:
+                if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%player%}:
+                    reduce {1v1::kolejka::numer::%loop-value%} by 1
+            reduce {1v1::graczewkolejce} by 1
+            delete {1v1::kolejka::wkolejce::%player%}
+            delete {1v1::kolejka::numer::%player%}
+            send "{@prefix} Opuściłeś kolejke"
+        stop
+
+command /1v1numer:
+    permission: 1v1.gracz
+    permission message: Nie masz uprawnień!
+    trigger:
+        send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
+        stop
+
+on disconnect:
+    if {1v1::duel::zaproszenie::%player%::*} is set:
+        delete {1v1::duel::zaproszenie::%player%::*}
+    if {1v1::walka::wgrze::%player%} is set:
+        add 1 to {1v1::gracz::przegrane::%player%}
+        loop {1v1::walka::wgrze::*}:
+            teleport loop-value to {1v1::spawn::koniec}
+            clear loop-value's inventory
+        wait 1 tick
+        delete {1v1::walka::wgrze::%player%}
+        loop {1v1::walka::wgrze::*}:
+            broadcast "{@prefix} &a&l%loop-value% &fwygrał pojedynek z &c&l%player%"
+            delete {1v1::walka::wgrze::%loop-value%}
+            add 1 to {1v1::gracz::wygrane::%loop-value%}
+        set {1v1::arena} to "wolna"
+        wait 3 seconds
+        make console execute command "/1v1start"
+    if {1v1::kolejka::wkolejce::%player%} is set:
+        loop {1v1::kolejka::wkolejce::*}:
+            if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%player%}:
+                reduce {1v1::kolejka::numer::%loop-value%} by 1
+        reduce {1v1::graczewkolejce} by 1
+        delete {1v1::kolejka::wkolejce::%player%}
+        delete {1v1::kolejka::numer::%player%}
+        send "{@prefix} Opuściłeś kolejke"
+    stop
+
+on player world change:
+    wait 1 tick
+    if {1v1::kolejka::wkolejce::%player%} is set:
+        make player execute command "/1v1opusc"
+    else if {1v1::walka::wgrze::%player%} is set:
+        make player execute command "/1v1opusc"
+    if {1v1::duel::zaproszenie::%player%::*} is set:
+        delete {1v1::duel::zaproszenie::%player%::*}
+    stop
+
+on death:
+    if {1v1::walka::wgrze::%player%} is set:
+        clear victim's inventory
+        make victim execute command "/1v1opusc"
+    stop
+
+on drop:
+    if {1v1::walka::wgrze::%player%} is set:
+        cancel event
+        send "{@prefix} Nie możesz wyrzucać itemów podczas walki"
+    stop
+
+command /1v1admin [<text>] [<text>]:
+    permission: 1v1.admin
+    permission message: Nie masz uprawnień!
+    trigger:
+        if arg 1 is "spawn":
+            if arg 2 is "1":
+                set {1v1::spawn::1} to player's location
+                send "{@prefix} Ustawiono spawn pierwszego gracza na arenie 1v1"
+            if arg 2 is "2":
+                set {1v1::spawn::2} to player's location
+                send "{@prefix} Ustawiono spawn drugiego gracza na arenie 1v1"
+            if arg 2 is "koniec":
+                set {1v1::spawn::koniec} to player's location
+                send "{@prefix} Ustawiono spawn końcowy gracza na arenie 1v1"
+            if arg 2 is "spawn":
+                set {1v1::spawn::spawn} to player's location
+                send "{@prefix} Ustawiono out gracza na arenie 1v1"
+        if arg 1 is "reload":
+            reload skript "1v1"
+            stop
+
+command /1v1opusclobby:
+    trigger:
+        if player's world is "1v1":
+            teleport player to {1v1::spawn::spawn}
+        stop
+
+command /1v1top:
+    permission: 1v1.gracz
+    permission message: {@prefix} Nie masz uprawnień!
+    trigger:
+        loop {1v1::gracz::wygrane::*}:
+            add 1 to {_size}
+            if {_low.to.high.list::%loop-value%} is not set:
+                set {_low.to.high.list::%loop-value%} to loop-index
+            else:
+                set {_n} to 0
+                loop {_size} times:
+                    set {_n} to {_n}+1
+                    {_low.to.high.list::%loop-value-1%.%{_n}%} is not set
+                    set {_low.to.high.list::%loop-value-1%.%{_n}%} to loop-index
+                    stop loop
+        wait 1 tick
+        set {_n} to size of {_low.to.high.list::*}
+        loop {_low.to.high.list::*}:
+            set {_high.to.low.list::%{_n}%} to loop-value
+            set {_n} to {_n}-1
+        wait 1 tick
+        set {_i} to 0
+#THIS IS THE MESSAGE WITH TOP KILLS
+        send "&7&m-----------&8< &6Top10 &c1v1 &8>&7&m-----------"
+        loop {_high.to.low.list::*}:
+            add 1 to {_topnumber}
+            set {_player} to "%loop-value%" parsed as offlineplayer
+            send "&f%{_topnumber}% - &6%{_player}% &8» &a%{1v1::gracz::wygrane::%loop-value%}% &f/ &c%{1v1::gracz::przegrane::%loop-value%}%"
+            add 1 to {_i}
+            if {_topnumber} > 9: #this is top 10 you can change it
+                stop
+        send "&7&m------------------------------"
+
+command /1v1staty [<player>]:
+    permission: 1v1.gracz
+    permission message: Nie masz uprawnień!
+    trigger:
+        if arg 1 is not set:
+            send "{@prefix} Twoje statystyki: &6%{1v1::gracz::wygrane::%player%}% &aWygranych &f/ &6%{1v1::gracz::przegrane::%player%}% &cPrzegranych"
+        if arg 1 is set:
+            send "{@prefix} Statystyki &b%arg 1%: &6%{1v1::gracz::wygrane::%arg 1%}% &aWygranych &f/ &6%{1v1::gracz::przegrane::%arg 1%}% &cPrzegranych"
+        stop
+
+command /duel [<player>]:
+    permission: 1v1.duel
+    permission message: {@prefix} Nie masz uprawnień!
+    trigger:
+        if player's world is "1v1":
+            if arg 1's world is "1v1":
+                if {1v1::duel::zaproszenie::%player%::%arg 1%} is not set:
+                    send "{@prefix} Dostałeś zaproszenie do pojedynku od gracza &6%player%" to arg 1
+                    send "{@prefix} Zaakceptuj komendą &6/duelakceptuj %player%" to arg 1
+                    send "{@prefix} Odrzuć komendą &6/duelodrzuc %player%" to arg 1
+                    send "{@prefix} Zaproszenie wygaśnie za &660 sekund" to arg 1
+                    send "{@prefix} Wysłano zaproszenie do gracza &6%arg 1%"
+                    send "{@prefix} Zaproszenie wygaśnie za &660 sekund"
+                    set {1v1::duel::zaproszenie::%player%::%arg 1%} to true
+                    loop 60 times:
+                        if {1v1::duel::zaproszenie::%player%::%arg 1%} is not set:
+                            if {1v1::walka::wgrze::%player%} is set:
+                                stop
+                            else:
+                                send "{@prefix} Twoje zaproszenie do gracza &6%arg 1% &fzostało anulowane."
+                                stop
+                        else:
+                            wait 1 second
+                    send "{@prefix} Gracz &6%arg 1% nie zaaceptował twojego zaproszenia do pojedynku"
+                    send "{@prefix} Zaproszenie do pojedynku od &6%player% &fwygasło" to arg 1
+                    delete {1v1::duel::zaproszenie::%player%::%arg 1%}
+                    stop
+                else:
+                    send "{@prefix} Już zaprosiłeś gracza &6%arg 1%..."
+            else:
+                send "{@prefix} Gracz, którego zapraszasz nie ma w lobby 1v1"
+        else:
+            send "{@prefix} Żeby wysłać zaproszenie do pojedynku musisz być w lobby 1v1 &6/warp 1v1"
+        stop
+
+command /duelakceptuj [<player>]:
+    permission: 1v1.duel
+    permission message: {@prefix} Nie masz uprawnień!
+    trigger:
+        if arg 1 is set:
+            if {1v1::duel::zaproszenie::%arg 1%::%player%} is set:
+                if player's world is "1v1":
+                    if arg 1's world is "1v1":
+                        if {1v1::kolejka::wkolejce::%player%} is not set:
+                            if {1v1::kolejka::wkolejce::%arg 1%} is not set:
+                                if {1v1::walka::wgrze::%arg 1%} is not set:
+                                    if {1v1::walka::wgrze::%player%} is not set:
+                                        set {1v1::pojedynekzzaproszenia} to true
+                                        if {1v1::graczewkolejce} < 0:
+                                            set {1v1::graczewkolejce} to 0
+                                        add 1 to {1v1::graczewkolejce}
+                                        set {1v1::kolejka::numer::%player%} to {1v1::graczewkolejce}
+                                        set {1v1::kolejka::wkolejce::%player%} to player
+                                        if {1v1::kolejka::numer::%player%}  is divisible by 2:
+                                            add 1 to {1v1::graczewkolejce}
+                                            loop {1v1::kolejka::numer::*}:
+                                                if {1v1::kolejka::numer::%loop-index%} is {1v1::kolejka::numer::%player%}-1:
+                                                    increase {1v1::kolejka::numer::%loop-index%} by 2
+                                                    set {_przerzut} to loop-index parsed as player
+                                                    send "{@prefix} Zostałeś przerzucony na &6%{1v1::kolejka::numer::%loop-index%}% &fz powodu Duelu &6%player% &fz &6%arg 1%" to {_przerzut}
+                                            set {1v1::kolejka::numer::%arg 1%} to {1v1::kolejka::numer::%player%}-1
+                                            set {1v1::kolejka::wkolejce::%arg 1%} to arg 1
+                                        else:
+                                            add 1 to {1v1::graczewkolejce}
+                                            set {1v1::kolejka::numer::%arg 1%} to {1v1::graczewkolejce}
+                                            set {1v1::kolejka::wkolejce::%arg 1%} to arg 1
+                                        if {1v1::graczewkolejce} > 1:
+                                            make console execute command "/1v1start"
+                                        delete {1v1::duel::zaproszenie::%arg 1%::%player%}
+                                    else:
+                                        send "{@prefix} Jesteś aktualnie w pojedynku"
+                                else:
+                                    send "{@prefix} Twój przeciwnik jest aktualnie w pojedynku"
+                            else:
+                                send "{@prefix} Twój przeciwnik jest w kolejce."
+                                send "{@prefix} Gracz &6%player% &fchciał zaakceptować twoje wyzwanie na duel, ale jesteś w kolejce. &b/1v1opusc&f, aby opuścić kolejkę" to arg 1
+                        else:
+                            send "{@prefix} Jesteś aktualnie w kolejce 1v1, wyjdz używając komendy &6/1v1opusc&f, aby móc zaaceptować wyzwanie"
+                    else:
+                        send "{@prefix} Twój przeciwnik wyszedł z lobby 1v1"
+                        send "{@prefix} Twój przeciwnik chciał zaakceptować zaproszenie, ale nie jesteś na &6/warp 1v1" to arg 1
+                else:
+                    send "{@prefix} Zaproszenie do pojedynku możesz zaakceptować tylko w lobby &6/warp 1v1"
+            else:
+                send "{@prefix} Gracz &6%arg 1% &fnie zaprosił ciebie do pojedynku"
+        else:
+            send "{@prefix} Wpisz nazwę gracza, od którego akcpetujesz zaproszenie"
+        stop
+
+command /duelodrzuc [<player>]:
+    permission: 1v1.duel
+    permission message: {@prefix} Nie masz uprawnień!
+    trigger:
+        if arg 1 is set:
+            if {1v1::duel::zaproszenie::%arg 1%::%player%} is set:
+                delete {1v1::duel::zaproszenie::%arg 1%::%player%}
+                send "{@prefix} Odrzuciłeś zaproszenie do pojedynku od gracza &6%arg 1%"
+                send "{@prefix} Gracz &6%player% &fodrzucił twoje zaproszenie do pojedynku" to arg 1
+            else:
+                send "{@prefix} Gracz &6%player% &fnie zapraszał cie do pojedynku lub jego zaproszenie wygasło"
+        else:
+            send "{@prefix} Wpisz nazwe gracza, od którego odrzucasz zaproszenie"
+        stop

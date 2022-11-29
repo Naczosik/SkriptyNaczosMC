@@ -1,0 +1,7 @@
+#krótki kod blokujący używanie ender pearl w regionie 'ubojnia' - terenie o wielkości 7x7 znajdującym się na spawnie służącym do walki w małej przestrzeni
+on shoot:
+    if projectile is an ender pearl:
+        if shooter is in region "ubojnia":
+            cancel event
+            send "&cNIE CYKAMY ZIOMEK!!"
+        

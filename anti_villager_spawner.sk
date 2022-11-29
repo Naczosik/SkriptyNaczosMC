@@ -1,0 +1,3 @@
+#kod używany do blokowania zmiany tworzonej istoty przez blok mob spawnera - później nieużywany, zamieniony przez funkcje dostępną w pliku konfiguracyjnym paper.yml 
+on right click on spawner:
+    cancel event

@@ -1,0 +1,93 @@
+#Prosty regulamin serwera wyświetlający się na czacie
+command /help:
+    aliases: pomoc
+    trigger:
+        send "&e------------------------"
+        send "<command:/dzialki>&bDzialki"
+        send "<command:/bazar pomoc>&bSklepy"
+        send "<command:/rangi>&bRangi"
+        send "<command:/tradepomoc>&bTrade"
+        send "<command:/tpy>&bTeleporty"
+        send "<command:/regulamin>&bRegulamin"
+        send "&aKliknij interesujący cię błękiny tekst aby dowiedzieć się więcej!"
+        send "&e------------------------"
+command /regulamin:
+    trigger:
+        send "&e------------------------"
+        send "&f1. &aZachowaj kulturę osobistą"
+        send "&f2. &aOszustwa, wykorzystywanie są &ckarane"
+        send "&f3. &aNick nie może zawierać elementów &crasistowskich, nieetycznych i obraźliwych"
+        send "&f4. &aNie zawracaj głowy administracji i &cnie proś &ao rangi/itemy itp."
+        send "&f5. &aUżywanie &4cheatów &ai &4wykorzystywanie błędów &aserwera/gry podlega &ckarze"
+        send "&f6. &aAdministracja nie odpowiada za straty w wyniku &cbugów, teleportów, dodawania do działek"
+        send "&f7. &aBudowanie obraźliwych/nieodpowiednich budowli wokół spawnu (również na działkach dookoła) jest karane"
+        send "&f8. &aAdministracja ma prawo &ckarać&a, za czyny nieuwzględnione w regulaminie."
+        send "&e------------------------"
+command /rangi:
+    trigger:
+        send "&e------------------------"
+        send "<command:/vip>&bVIP"
+        send "<command:/vip+>&bVIP+"
+        send "<command:/miniyt>&bMINIYT"
+        send "&e------------------------"
+command /vip:
+    trigger:
+        send "&e------------------------"
+        send "&a&l+ &fprefix &6[VIP] &foraz standardowe pisanie na &fbiało zamiast &7szaro"
+        send "&a&l+ &fdwa /sethome /home"
+        send "&a&l+ &frozpoczynanie głosowania na dzień &6/glosowanie"
+        send "&a&l+ &fwejście na pełny serwer"
+        send "&a&l+ &fmożliwość zmiany skina /skin"
+        send "&a&l+ &f12 ofert na /ah"
+        send "&a&l+ &f/hat"
+        send "&e------------------------"
+command /vip+:
+    trigger:
+        send "&e------------------------"
+        send "&a&l+ &fprefix &6[VIP&c+&6] &foraz standardowe pisanie na &fbiało zamiast &7szaro"
+        send "&a&l+ &ftrzy /sethome /home"
+        send "&a&l+ &frozpoczynanie głosowania na dzień &6/glosowanie"
+        send "&a&l+ &fwejście na pełny serwer"
+        send "&a&l+ &fmożliwość zmiany skina /skin"
+        send "&a&l+ &f24 sklepy"
+        send "&a&l+ &f/hat"
+        send "&a&l+ &fpisanie na &1k&2o&3l&4o&5r&6o&7w&8o"
+        send "&a&l+ &fzmiana prefixu komendą /kv+"
+        send "&e------------------------"
+command /miniyt:
+    trigger:
+        send "&e------------------------"
+        send "&fminimum 100 wyświetleń na film z serwera"
+        send "&ffilm musi być schludny"
+        send "&c&lZgłoś się po rangę na naszym discordzie"
+        send "&c&lapisz do Napewnoasi"
+        send "&e------------------------"
+command /tradepomoc:
+    trigger:
+        send "&e------------------------"
+        send "&a/trade nick &f- wysyła zaproszenie do handlu"
+        send "&a/trade accept &f- &aakceptuje &fzaproszenie do handlu"
+        send "&aa/trade deny &f- &codrzuca &fzaproszenie do handlu"
+        send "&a/trade toggle &f- przełącza automatyczne odrzucanie ofert"
+        send "&e------------------------"
+command /teleporty:
+    aliases: tpy
+    trigger:
+        send "&e------------------------"
+        send "<command:/warp pvp>&bPVP"
+        send "<command:/spawn>&bSPAWN"
+        send "<command:/warp parkour>&bPARKOUR"
+        send "&e------------------------"
+command /dzialki:
+    trigger:
+        send "&e------------------------"
+        send "<command:/pierwszadzialka>&b/pierwszadzialka &f- daje startową działke"
+        send "<command:/warp dzialki>&bCrafting dzialki &f- teleportuje na spawn do tablicy pokazowej"
+        send "&fAby dodać gracza, wpisz &a/dzialka add nick"
+        send "&e---------&c&k0&cUWAGA!!!&c&k0&e---------"
+        send "&fDodajesz do działki &aNA WŁASNĄ ODPOWIEDZIALNOŚĆ!"
+        send "&fAby usunąć gracza, wpisz &b/dzialka remove nick"
+        send "&e------------------------"
+command /linkdorang:
+    trigger:
+        send "http://itemshop.pl/848276.html"

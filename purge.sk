@@ -1,0 +1,7 @@
+#skript czyszczący automatycznie wszystkie logi pluginu CoreProtect oraz działek z pluginu ProtectionStones po danym okresie każdego dnia o 18:00, do działania jest potrzebny add-on SkJade
+when it's 18:00 in the real world:
+    execute console command "/co purge t:3d"
+    execute console command "/ps admin cleanup remove 30 world"
+    execute console command "/ps admin cleanup remove 30 world_the_end"
+    execute console command "/ps admin cleanup remove 30 world_nether"
+    broadcast "&a&lUsunięto działki graczy nieaktywnych od ponad 30 dni!"

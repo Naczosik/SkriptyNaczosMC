@@ -1,0 +1,8 @@
+#Proste skrócenie komendy /warp event (z pluginu Essensialsx) oraz teleportujący gracza na spawn gdy wyloguje się w świecie minigrier, gdzie istniały minigry stowrzone głównie przez Kassarix(https://www.youtube.com/@kassar7543) 
+command /event:
+    trigger:
+        make player execute command "/warp event"
+on quit:
+    if player's world is "minigry":
+        set player's gamemode to survival
+        teleport player to {spleef::tp::out}

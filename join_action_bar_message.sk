@@ -1,0 +1,7 @@
+#prosty skript pokazujący dołączenie i opuszczenie gracza na Action barze, wyłączenie podstawowej wiadomości powitalnej jak i pożegnalnej odbywa się przez plugin Essensialx
+on join:
+	loop all players:
+		send action bar "&7(&a+&7) &f&l%player%" to loop-value
+on quit:
+	loop all players:
+		send action bar "&7(&c-&7) &f&l%player%" to loop-value

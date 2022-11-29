@@ -1,0 +1,12 @@
+#skript który został stworzony przez potrzebe wyteleportowywania graczy z zablokowanych teleportów do netheru na działkach
+on world change:
+    wait 10 seconds
+    if block at player's location is nether portal:
+        teleport player to {spawnlocation}
+command /setlocation [<text>]:
+    permission: naczossk.setlocations
+    permission message: &cNie masz uprawnień.
+    trigger:
+        if arg 1 is "spawn":
+            set {spawnlocation} to player's location
+            send "&aUstawiono spawnlocation do &7netherportal_stuck.sk &aw miejscu &7%{spawnlocation}%"

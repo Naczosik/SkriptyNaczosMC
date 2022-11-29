@@ -1,0 +1,109 @@
+#plugin pozwalający na zmiane koloru pseudonimu przez graczy z rangą vip albo vip+, z możliwością zmiany samego plusa przez vip+, kod pozwalał na ustawienie klasycznych kolorów minecraft (od 0 do f) oraz kolorów możliwych do stowrzenia przez podanie ich kodu RGB (Możliwość dodana w minecraft 1.16). Posiada też sprawdzanie czy graczowi nie minęłą ranga i tym samym stracił podstawe do posiadania kolorowego prefixu. Do działania kodu jest potrzebny plugin LuckPerms
+#vippluskolor
+command /kolorvip++ [<text>] [<text>]:
+    aliases: kv++
+    permission: kolor.vip++
+    permission message: &7[&fNaczosMC&7] &cNie masz uprawnień, komenda dostępna dla &6vip++
+    trigger:
+        if arg 1 is "0" or "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" or "a" or "b" or "c" or "d" or "e" or "f":
+            make console execute command "/lp user %player% permission unset ""prefix.5.&d[&9V&bI&aP&e+&6+&c]&%{kolorvip::%player%::vip}% "" "
+            set {kolorvip::%player%::vip} to arg 1
+            make console execute command "/lp user %player% permission set ""prefix.5.&d[&9V&bI&aP&e+&6+&c]&%{kolorvip::%player%::vip}% "" "
+            send "&aUstawiono nowy tag"
+            stop
+        if arg 1 is "##":
+            if length of arg 2 is 6:
+                make console execute command "/lp user %player% permission unset ""prefix.5.&d[&9V&bI&aP&e+&6+&c]&%{kolorvip::%player%::vip}% "" "
+                set {kolorvip::%player%::vip} to "##%arg 2%"
+                make console execute command "/lp user %player% permission set ""prefix.5.&d[&9V&bI&aP&e+&6+&c]&%{kolorvip::%player%::vip}% "" "
+                send "&aUstawiono nowy tag"
+                stop
+            else:
+                send "&cKod hex składa się z 6 znaków https://www.canva.com/colors/color-wheel/"
+                stop
+        else:
+            send "&cPoprawne użycie: &6/kv++ (kolor 0-9 a-f) lub &6/kv++ ## (kodhex bez ##)"
+            stop
+command /kolorvip+ [<text>] [<text>] [<text>]:
+    aliases: kv+
+    permission: kolor.vip+
+    permission message: &7[&fNaczosMC&7] &cNie masz uprawnień, komenda dostępna dla &6vip+
+    trigger:
+        if arg 1 is "+":
+            if arg 2 is "0" or "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" or "a" or "b" or "c" or "d" or "e" or "f":
+                make console execute command "/lp user %player% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                if {kolorvip::%player%::vip} is not set:
+                    set {kolorvip::%player%::vip} to "6"
+                set {kolorvip::%player%::+} to arg 2
+                make console execute command "/lp user %player% permission set ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                send "&aUstawiono nowy tag"
+                stop
+            if arg 2 is "##":
+                if length of arg 3 is 6:
+                    make console execute command "/lp user %player% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                    if {kolorvip::%player%::+} is not set:
+                        set {kolorvip::%player%::vip} to "6"
+                    set {kolorvip::%player%::+} to "##%arg 3%"
+                    make console execute command "/lp user %player% permission set ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                    send "&aUstawiono nowy tag"
+                    stop
+                else:
+                    send "&cKod hex składa się z 6 znaków https://www.canva.com/colors/color-wheel/"
+                    stop
+            else:
+                send "&cPoprawne użycie: &6/kv+ + (kolor 0-9 a-f) lub &6/kv+ + ## (kodhex bez ##)"
+                stop
+        if arg 1 is "vip":
+            if arg 2 is "0" or "1" or "2" or "3" or "4" or "5" or "6" or "7" or "8" or "9" or "a" or "b" or "c" or "d" or "e" or "f":
+                make console execute command "/lp user %player% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                if {kolorvip::%player%::+} is not set:
+                    set {kolorvip::%player%::+} to "c"
+                set {kolorvip::%player%::vip} to arg 2
+                make console execute command "/lp user %player% permission set ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                send "&aUstawiono nowy tag"
+                stop
+            if arg 2 is "##":
+                if length of arg 3 is 6:
+                    make console execute command "/lp user %player% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                    if {kolorvip::%player%::vip} is not set:
+                        set {kolorvip::%player%::+} to "c"
+                    set {kolorvip::%player%::vip} to "##%arg 3%"
+                    make console execute command "/lp user %player% permission set ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+                    send "&aUstawiono nowy tag"
+                    stop
+                else:
+                    send "&cKod hex składa się z 6 znaków https://www.canva.com/colors/color-wheel/"
+                    stop
+            else:
+                send "&cPoprawne użycie: &6/kv+ vip (kolor 0-9 a-f) lub &6/kv+ vip ## (kodhex bez ##)"
+                stop
+        if arg 1 is not "vip" or "+":
+            send "&cPoprawne użycie: &6/kv+ (vip/+) (kolor 0-9 a-f) lub &6/kv+ (vip/+) ## (kodhex bez ##)"
+            stop
+        stop
+on join:
+    if player has permission "prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] ":
+        if player doesn't have permission "kolor.vip+":
+            make console execute command "/lp user %player% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+    stop
+command /kolorvipreset [<player>]:
+    permission: kolor.admin
+    permission message: &7[&fNaczosMC&7] &cNie masz uprawnień
+    trigger:
+        if arg 1 is set:
+            make console execute command "/lp user %arg 1% permission unset ""prefix.4.&%{kolorvip::%player%::vip}%[VIP&%{kolorvip::%player%::+}%&l+&%{kolorvip::%player%::vip}%] "" "
+            delete {kolorvip::%arg 1%::+}
+            delete {kolorvip::%arg 1%::vip}
+            send "&fZresetowano tag gracza &6%arg 1%"
+        else:
+            send "&cBłąd."
+command /kolorkivipadmin:
+    permission: kolor.admin
+    permission message: &7[&fNaczosMC&7] &cNie masz uprawnień
+    trigger:
+        loop all players:
+            if loop-player has permission "prefix.4.&%{kolorvip::%loop-player%::vip}%[VIP&%{kolorvip::%loop-player%::+}%&l+&%{kolorvip::%loop-player%::vip}%] ":
+                send "%loop-player%"
+                if loop-player doesn't have permission "kolor.vip+":
+                    send "&c%loop-player%" to player
+                    make console execute command "/lp user %loop-player% permission unset ""prefix.4.&%{kolorvip::%loop-player%::vip}%[VIP&%{kolorvip::%loop-player%::+}%&l+&%{kolorvip::%loop-player%::vip}%] "" "

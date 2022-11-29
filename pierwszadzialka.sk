@@ -1,0 +1,18 @@
+#kod umożliwiający danie pierwszej działki dla każdego gracza, stworzony w wyniku braku możliwości obdarowywania graczy działką przez komende /kit z pluginu Essentialsx
+command /pierwszadzialka:
+    trigger:
+        if {pierwszadzialka::%player%} is not set:
+            make console execute command "/ps give zwykla %player%"
+            set {pierwszadzialka::%player%} to now
+        else:
+            send "Już otrzymałeś/aś pierwszą działkę %{pierwszadzialka::%player%}%. Kolejne tworzy się w crafting. Wiecej informacji &a/pomoc"
+        stop
+command /pierwszadzialkaadmin [<player>]:
+    permission: pierwszadzialka.admin
+    trigger:
+        if arg 1 is set:
+            delete {pierwszadzialka::%arg 1%}
+            send "Usunięto pierwsza działke %arg 1% z bazy danych"
+            stop
+        delete {pierwszadzialka::*}
+        send "Usunięto pierwsze działki z bazy danych"

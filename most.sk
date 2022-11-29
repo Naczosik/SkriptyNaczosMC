@@ -1,0 +1,34 @@
+#niezautomatywana minigra do mapy Kassarixa, pozwalająca na podanie dokładnego odsetka bloków które znikają oraz na podanie dokładnego czasu danego graczą na przejście mostu
+command /most [<text>] [<number>] [<number>]:
+    permission: most.admin
+    trigger:
+        if arg 1 is "1":
+            set {tescior::pos::1} to location of block under player
+        if arg 1 is "2":
+            set {tescior::pos::2} to location of block under player
+            set {most::liczbablokow} to 0
+            loop blocks within {tescior::pos::1} and {tescior::pos::2}:
+                add 1 to {most::liczbablokow}
+        if arg 1 is "3":
+            #set {_count} to 0
+            #loop blocks within {tescior::pos::1} and {tescior::pos::2}:
+            #    add 1 to {_count}
+            #send "liczba bloków: %{_count}%"
+            #send "liczba bloków od usunięcia: %rounded {most::liczbablokow}*arg 2%"
+            send "&e&lPOZIOM ZNISZCZENIA MOSTU %arg 2*100% &e&l%%" to players in world "minigry"
+            send "&e&lCZAS: %arg 3% &e&lsek" to players in world "minigry"
+            #broadcast "&e&lPOZIOM ZNISZCZENIA MOSTU %arg 2*100% %%" to players in world "minigry"
+            #broadcast "&e&lCZAS: %arg 3% sek"
+            wait 5 seconds
+            loop rounded {most::liczbablokow}*(1-arg 2) times:
+                set {_ifdeleted} to 0
+                while {_ifdeleted} is 0:
+                    set {_deletingblock} to location of a random element out of blocks within {tescior::pos::1} and {tescior::pos::2}
+                    if block at {_deletingblock} is not white stained glass:
+                        set block at {_deletingblock} to white stained glass
+                        set {_ifdeleted} to 1
+            wait "%arg 3% seconds" parsed as timespan
+            #loop arg 2 times:
+            #    send action bar ""
+            loop blocks within {tescior::pos::1} and {tescior::pos::2}:
+                set loop-block to block 1 meters below loop-block
