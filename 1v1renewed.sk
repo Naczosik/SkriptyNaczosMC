@@ -1,0 +1,50 @@
+options:
+    prefix: &f[&b1v1&f]
+    wrong-world: &cWejdź do lobby 1v1 &6/warp 1v1&c, aby móć walczyć na arenie 1v1.
+    already-queued: &cJesteś już w kolejce.
+    already-on-arena: &cNie możesz dołączyć do kolejki podczas walki.
+    one_player-in-queue1: &fJesteś jedynym graczem w kolejce
+    one_player-in-queue2: &fOczekiwanie na drugiego gracza
+    no-free-arenas: &cBrak wolnych aren, proszę czekać...
+    no-perms: &cNie masz uprawnień!
+    found-opponent: &aZnaleziono przeciwnika! Teleportuje na arene za {@tp-delay} sekund
+    tp-delay: 5
+on load:
+command /1v1renewed [<text>]:
+    permission: 1v1.gracz
+    permission message: {@prefix} {@no-perms}
+    trigger:
+        if player's world is not "1v1":
+            send "{@prefix} {@wrong-world}"
+            stop
+        if {1v1::status::%player%} is "queued":
+            send "{@prefix} {@already-queued}"
+            stop
+        if {1v1::status::%player%} is "on-arena":
+            send "{@prefix} {@already-on-arena}"
+            stop
+        if {1v1::queue-size} < 0:
+            set {1v1::queue-size} to 0
+        increase {1v1::queue-size} by 1
+        set {1v1::queue-number::%player%} to {1v1::queue-size}
+        set {1v1::status::%player%} to "queued"
+        if {1v1::queue-size} > 2:
+            send "{@prefix} {@queue-busy}"
+            stop
+        if {1v1::queue-size} = 1:
+            send "{@prefix} {@one-player-in-queue1}"
+            send "{@prefix} {@one-player-in-queue2}"
+            stop
+        loop {1v1::arenas::*}:
+            if loop-value is "open":
+                set {_free-arenas::%loop-value%} to true
+        set {_count-free-arenas} to size of {_free-arenas::*}
+        if {_count-free-arenas} = 0:
+            send "{@prefix} {@no-free-arenas}"
+            stop
+        loop {1v1::status::*}:
+            if loop-value is "queued":
+                if {1v1::queue-number::%loop-index%} is 1:
+                    send "{@prefix} {@found-opponent}"
+        wait {@tp-delay} seconds
+        #koniec /1v1, początek /1v1start
