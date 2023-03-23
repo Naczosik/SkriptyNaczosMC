@@ -45,5 +45,7 @@ command /1v1renewed [<text>]:
         loop {1v1::status::*}:
             if {1v1::queue-number::%loop-index%} is 1:
                 send "{@prefix} {@found-opponent}"
+                set {_player1} to loop-index parsed as player
+        set {_player2} to player
         wait {@tp-delay} seconds
         #koniec /1v1, początek /1v1start
