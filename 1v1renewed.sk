@@ -35,10 +35,11 @@ command /1v1renewed [<text>]:
             send "{@prefix} {@one-player-in-queue1}"
             send "{@prefix} {@one-player-in-queue2}"
             stop
+        set {_count-free-arenas} to 0
         loop {1v1::arenas::*}:
             if loop-value is "open":
-                set {_free-arenas::%loop-index%} to true
-        set {_count-free-arenas} to size of {_free-arenas::*}
+                increase {_count-free-arenas} by 1
+                set {_arena-index::%loop-index%} to {_count-free-arenas}
         if {_count-free-arenas} = 0:
             send "{@prefix} {@no-free-arenas}"
             stop
