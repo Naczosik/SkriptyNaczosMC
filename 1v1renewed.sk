@@ -43,8 +43,7 @@ command /1v1renewed [<text>]:
             send "{@prefix} {@no-free-arenas}"
             stop
         loop {1v1::status::*}:
-            if loop-value is "queued":
-                if {1v1::queue-number::%loop-index%} is 1:
-                    send "{@prefix} {@found-opponent}"
+            if {1v1::queue-number::%loop-index%} is 1:
+                send "{@prefix} {@found-opponent}"
         wait {@tp-delay} seconds
         #koniec /1v1, początek /1v1start
