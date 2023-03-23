@@ -49,3 +49,4 @@ command /1v1renewed [<text>]:
         set {_player2} to player
         wait {@tp-delay} seconds
         #koniec /1v1, początek /1v1start
+        set {_random-arena} to random integer between 1 and {_count-free-arenas}
