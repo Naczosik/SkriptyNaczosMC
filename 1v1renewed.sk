@@ -37,7 +37,7 @@ command /1v1renewed [<text>]:
             stop
         loop {1v1::arenas::*}:
             if loop-value is "open":
-                set {_free-arenas::%loop-value%} to true
+                set {_free-arenas::%loop-index%} to true
         set {_count-free-arenas} to size of {_free-arenas::*}
         if {_count-free-arenas} = 0:
             send "{@prefix} {@no-free-arenas}"
