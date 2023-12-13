@@ -1,0 +1,80 @@
+#statusy ::player::* :waiting, starting, ingame, spec
+#statusy gier ::status :waiting, starting, ingame
+#teleporty kolorki: mid, spec,
+options:
+    kolorkiminplayers: 4 #minimalna wartość graczy
+    kolorkistartingtime: 10 #czas między osiagnieciem minimalnej wartości graczy a startem w sekundach
+    notenoughtplayers: "Za mało graczy, aby wystartować..."
+    startingmessage: "Gra startuje za"
+    alreadystartingmessage: "Gra już startuje, dodano do kolejki"
+    alreadystartedgmessage: "Gra już trwa, dodano na widownie, dałączysz do kolejnej rozgrywki."
+
+command /kolorki:
+    trigger:
+        if {kolorki::status} is "starting":
+            teleport player to {kolorki::tp::mid}
+            set {kolorki::player::%player%} to "starting"
+            send {@alreadystartingmessage}
+        if {kolorki::status} is "ingame":
+            teleport player to {kolorki::tp::spec}
+            set {kolorki::player::%player%} to "spec"
+            send {@alreadystartedgmessage}
+        if {kolorki::status} is "waiting":
+            teleport player to {kolorki::tp::mid}
+            set {kolorki::player::%player%} to "waiting"
+            loop {kolorki::player::*}:
+                add 1 to {_countwaiting}
+            if {_countwaiting} < {@kolorkiminplayers}:
+                send {@notenoughtplayers}
+                stop
+            loop {kolorki::player::*}:
+                set {kolorki::player::%loop-index%} to "starting"
+            set {kolorki::status} to "starting"
+            loop {@kolorkistartingtime} times:
+                set {_countwaiting} to 0
+                loop {kolorki::player::*}:
+                    add 1 to {_countwaiting}
+                    if {_countwaiting} < {@kolorkiminplayers}:
+                        send {@notenoughtplayers}
+                        set {kolorki::status} to "waiting"
+                        stop
+                    send "%{@startingmessage}% %{kolorkistartingtime}%-%loop-index-1%..." to loop-index-2 parsed as player
+                wait 1 second
+            loop {kolorki::player::*}:
+                teleport loop-index parsed as player to {kolorki::tp::mid}
+                set {kolorki::player::%loop-index%} to "ingame"
+            set {kolorki::status} to "ingame"
+function minigame(minigamename: text, minigameplayer: player = event-player):
+    if {%_minigamename%::status} is "starting":
+        teleport player to {%{_minigamename}%::tp::mid}
+        set {%{_minigamename}%::player::%player} to "starting"
+        send {@alreadystartingmessage} to {_minigameplayer}
+    if {%{_minigamename}%::status} is "ingame":
+        teleport player to {%{_minigamename}%::tp::spec}
+        set {%{_minigamename}%::player::%player} to "spec"
+        send {@alreadystartedgmessage} to {_minigameplayer}
+    if {%{_minigamename}%::status} is "waiting":
+        teleport player to {%{_minigamename}%::tp::mid}
+        set {%{_minigamename}%::player::%player%} to "waiting"
+        loop {%{_minigamename}%::player:*}:
+            add 1 to {_countwaiting}
+        if {_countwaiting} < {@%{_minigamename}%minplayer}:
+            send {@notenoughtplayers} to {_minigameplayer}
+            stop
+        loop {%{_minigamename}%::player::*}:
+            set {%{_minigamename}%::player::%loop-index%} to "starting"
+        set {%{_minigamename}%::status} to "starting"
+        loop {@%{_minigamename}%startingtime} times:
+            set {_countwaiting} to 0
+            loop {%{_minigamename}%::player::*}:
+                add 1 to {_countwaiting}
+                if {_countwaiting} < {@%{_minigamename}%minplayer}:
+                    send {@notenoughtplayers} to loop-index-2 parsed as player
+                    set {%{_minigamename}%::status} to "waiting"
+                    stop
+                send "%{@startingmessage}% %{%{_minigamename}%startingtime}-loop-index%..." to loop-index-2 parsed as player
+            wait 1 second
+        loop {%{_minigamename}%::player::*}:
+            teleport player to 
+            set loop-value to "ingame"
+        set {%{_minigamename}%::status} to "ingame"
