@@ -1,19 +1,22 @@
 #Random Teleport
 options:
-    tpradius: 5000 #promień w którym teleportuje gracza
-    tpworld: world
+    tpradius: 2000 #promień w którym teleportuje gracza
+    tpworld: "world"
 on rightclick on cherry button:
-    block behind is bedrock:
+    block behind is bedrock
+    event-world is "spawn"
+    while true is true:
         set {_x} to random integer between {@tpradius} and -{@tpradius}
-        set {_y} to 256
+        set {_y} to 320
         set {_z} to random integer between {@tpradius} and -{@tpradius}
         set {_xyz} to location at {_x}, {_y}, {_z} in {@tpworld}
         teleport player to {_xyz}
-        wait a tick
-        loop 256 times:
+        loop 320 times:
             if block under player is air:
                 teleport player under player
             else:
                 stop loop
-        send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
-        stop
+        if block under player is not water:
+            stop loop
+    send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+    stop
