@@ -166,18 +166,6 @@ on disconnect:
         delete {1v1::duel::zaproszenie::%player%::*}
     if {1v1::walka::wgrze::%player%} is set:
         duelleave(event-player)
-        # add 1 to {1v1::gracz::przegrane::%player%}
-        # loop {1v1::walka::wgrze::*}:
-        #     teleport loop-value to {1v1::spawn::koniec}
-        #     clear loop-value's inventory
-        # wait 1 tick
-        # delete {1v1::walka::wgrze::%player%}
-        # loop {1v1::walka::wgrze::*}:
-        #     broadcast "{@prefix} &a&l%loop-value% &fwygrał pojedynek z &c&l%player%"
-        #     delete {1v1::walka::wgrze::%loop-value%}
-        #     add 1 to {1v1::gracz::wygrane::%loop-value%}
-        # set {1v1::arena} to "wolna"
-        # wait 3 seconds
     if {1v1::kolejka::wkolejce::%player%} is set:
         loop {1v1::kolejka::wkolejce::*}:
             if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%player%}:
