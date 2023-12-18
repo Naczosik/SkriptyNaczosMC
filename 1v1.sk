@@ -1,9 +1,30 @@
 #Jeden z dłuższych projektów. Kod stworzony w 2020 roku, nie odświeżany od tamtego czasu, w tym momencie poprawiłbym te dziwne ify przez sprawdzanie odwrotnych stwierdzeń (np. 'if player's world is "1v1":' zamienił na sprawdzenie czy gracz nie jest w świecie '1v1' co w przypadku prawdy odsyłałoby wiadomość, że znajduje się w złym świecie i 'stop' który nie pozwalał dalszą egzekucje kodu, a oszczędziłoby wielokrotne tabowanie i zwiększyłoby przejrzystość kodu. Kod od 280 linijki był poprzednikiem 1v1, w aktualnej wersji nie działa.
+#statusy 1v1::arena : wolna, trwa
+#1v1::graczewkolejce
+#1v1::kolejka::numer:: : index - nick, value - numer
+#1v1::kolejka::wkolejce:: : index - nick, value - nick
+#1v1::walka::wgrze:: : index - nick, value - nick
 options:
-    prefix: &f[&b1v1&f]
+    prefix: &dNaczos&f&lMC &b1v1
     wrongworldmessage: &cWejdź do lobby 1v1 &6/warp 1v1&c, aby móć walczyć na arenie 1v1
     alreadyinqueue: &cJesteś już w kolejce
     alreadyingame: &cNie możesz dołączyć do kolejki podczas walki
+    1v1helmet: diamond helmet of protection 4 and unbreaking 3
+    1v1chestplate: diamond chestplate of protection 4 and unbreaking 3
+    1v1leggings: diamond leggings of protection 4 and unbreaking 3
+    1v1boots: diamond boots of protection 4 and unbreaking 3
+
+variables:
+    {1v1slot0} = netherite sword of sharpness 5 and unbreaking 3
+    {1v1slot1} = 2 splash potion of strong regeneration
+    {1v1slot2} = 3 golden apple
+    {1v1slot3} = 5 golden carrot
+    {1v1slot4} = false
+    {1v1slot5} = false
+    {1v1slot6} = false
+    {1v1slot7} = false
+    {1v1slot8} = false
+    {1v1slot9} = false
 
 on load:
     loop {1v1::walka::wgrze::*}:
@@ -30,7 +51,7 @@ command /1v1:
         if {1v1::kolejka::wkolejce::%player%} is set:
             send "{@prefix} {@alreadyinqueue}"
             stop
-        if {1v1::walka::wgrze::%player%} is not set:
+        if {1v1::walka::wgrze::%player%} is set:
             send "{@prefix} {@alreadyingame}"
             stop
         if {1v1::graczewkolejce} < 0:
@@ -38,7 +59,6 @@ command /1v1:
         add 1 to {1v1::graczewkolejce}
         set {1v1::kolejka::numer::%player%} to {1v1::graczewkolejce}
         set {1v1::kolejka::wkolejce::%player%} to player
-        wait 5 ticks
         if {1v1::graczewkolejce} is 1:
             if {1v1::arena} is "trwa":
                 send "{@prefix} Arena jest zajęta"
@@ -55,73 +75,51 @@ command /1v1:
             else:
                 send "{@prefix} Przeciwnik już czeka, czekamy na zwolnienie się areny"
                 loop {1v1::kolejka::wkolejce::*}:
-                    if loop-value is player:
-                        send "{@prefix} Znaleziono przeciwnika, czekamy na zwolnienie areny" to loop-value
+                    send "{@prefix} Znaleziono przeciwnika, czekamy na zwolnienie areny" to loop-value
         send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
         broadcast "{@prefix} Gracz &6%player% &fdołączył do kolejki &b1v1"
-    else:
-        send "{@prefix} &cNie możesz dołączyć do kolejki podczas walki"
 
 command /1v1start:
     permission: 1v1.admin
     permission message: Nie masz uprawnień!
     trigger:
-        if {1v1::graczewkolejce} >=2:
-            if {1v1::arena} is "wolna":
-                set {1v1::arena} to "trwa"
-                loop {1v1::kolejka::wkolejce::*}:
-                    if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
-                        send "{@prefix} &fArena rozpocznie się za &a3 &fsekundy" to loop-value
-                        play sound "BLOCK_NOTE_PLING" with volume 100 with pitch 1 at loop-value for loop-value
-                wait 3 seconds
-                loop {1v1::kolejka::wkolejce::*}:
-                    if {1v1::kolejka::numer::%loop-value%} is 1:
-                        teleport loop-value to {1v1::spawn::1}
-                        set {_gracz1} to loop-value
-                        heal {_gracz1}
-                        feed {_gracz1}
-                        clear {_gracz1}'s inventory
-                        clear potion effects of {_gracz1}
-                        wait 1 tick
-                        give netherite sword of sharpness 5 and unbreaking 3 to {_gracz1}
-                        give 2 splash potion of strong regeneration to {_gracz1}
-                        give 3 golden apple to {_gracz1}
-                        give 5 golden carrot to {_gracz1}
-                        equip {_gracz1} with diamond helmet of protection 4 and unbreaking 3
-                        equip {_gracz1} with diamond chestplate of protection 4 and unbreaking 3
-                        equip {_gracz1} with diamond leggings of protection 4 and unbreaking 3
-                        equip {_gracz1} with diamond boots of protection 4 and unbreaking 3 
-                        send "{@prefix} &cWALCZ!" to loop-value
-                        set {1v1::walka::wgrze::%loop-value%} to loop-value
-                        wait 1 tick
-                        delete {1v1::kolejka::wkolejce::%loop-value%}
-                        delete {1v1::kolejka::numer::%loop-value%}
-                    if {1v1::kolejka::numer::%loop-value%} is 2:
-                        teleport loop-value to {1v1::spawn::2}
-                        set {_gracz2} to loop-value
-                        heal {_gracz2}
-                        feed {_gracz2}
-                        clear {_gracz2}'s inventory
-                        clear potion effects of {_gracz2}
-                        wait 1 tick
-                        give netherite sword of sharpness 5 and unbreaking 3 to {_gracz2}
-                        give 2 splash potion of strong regeneration to {_gracz2}
-                        give 3 golden apple to {_gracz2}
-                        give 5 golden carrot to {_gracz2}
-                        equip {_gracz2} with diamond helmet of protection 4 and unbreaking 3
-                        equip {_gracz2} with diamond chestplate of protection 4 and unbreaking 3
-                        equip {_gracz2} with diamond leggings of protection 4 and unbreaking 3
-                        equip {_gracz2} with diamond boots of protection 4 and unbreaking 3 
-                        send "{@prefix} &cWALCZ!" to loop-value
-                        set {1v1::walka::wgrze::%loop-value%} to loop-value
-                        wait 1 tick
-                        delete {1v1::kolejka::wkolejce::%loop-value%}
-                        delete {1v1::kolejka::numer::%loop-value%}
-                reduce {1v1::graczewkolejce} by 2
-                loop {1v1::kolejka::wkolejce::*}:
-                    reduce {1v1::kolejka::numer::%loop-value%} by 2
-                    send "{@prefix} Twoje miejsce w kolejce: &6%{1v1::kolejka::numer::%loop-value%}%&f/&6%{1v1::graczewkolejce}%" to loop-value
+        if {1v1::graczewkolejce} < 2:
             stop
+        if {1v1::arena} is "wolna":
+            set {1v1::arena} to "trwa"
+            loop {1v1::kolejka::wkolejce::*}:
+                if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
+                    send "{@prefix} &fArena rozpocznie się za &a3 &fsekundy" to loop-value
+                    play sound "BLOCK_NOTE_PLING" with volume 100 with pitch 1 at loop-value for loop-value
+            wait 3 seconds
+            loop {1v1::kolejka::wkolejce::*}:
+                if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
+                    set {_gracz} to loop-value
+                    duelkit({_gracz}, {1v1::kolejka::numer::%loop-value%})
+            reduce {1v1::graczewkolejce} by 2
+            loop {1v1::kolejka::wkolejce::*}:
+                reduce {1v1::kolejka::numer::%loop-value%} by 2
+                send "{@prefix} Twoje miejsce w kolejce: &6%{1v1::kolejka::numer::%loop-value%}%&f/&6%{1v1::graczewkolejce}%" to loop-value
+
+function duelkit(duelplayer: player, duelnumber: integer):
+    teleport {_duelplayer} to {1v1::spawn::%{_duelnumber}%}
+    heal {_duelplayer}
+    feed {_duelplayer}
+    clear {_duelplayer}'s inventory
+    clear potion effects of {_duelplayer}
+    loop 10 times:
+        set {_s} to loop-number - 1
+        if {1v1slot%{_s}%} is not false:
+            give {1v1slot%{_s}%} to {_duelplayer}
+    equip {_duelplayer} with {@1v1helmet}
+    equip {_duelplayer} with {@1v1chestplate}
+    equip {_duelplayer} with {@1v1leggings}
+    equip {_duelplayer} with {@1v1boots}
+    send "{@prefix} &cWALCZ!" to {_duelplayer}
+    set {1v1::walka::wgrze::%{_duelplayer}%} to {_duelplayer}
+    delete {1v1::kolejka::wkolejce::%{_duelplayer}%}
+    delete {1v1::kolejka::numer::%{_duelplayer}%}
+
 
 command /1v1opusc:
     permission: 1v1.gracz
@@ -260,7 +258,7 @@ command /1v1top:
             set {_n} to {_n}-1
         wait 1 tick
         set {_i} to 0
-#THIS IS THE MESSAGE WITH TOP KILLS
+        #THIS IS THE MESSAGE WITH TOP KILLS
         send "&7&m-----------&8< &6Top10 &c1v1 &8>&7&m-----------"
         loop {_high.to.low.list::*}:
             add 1 to {_topnumber}
