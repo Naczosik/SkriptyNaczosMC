@@ -1,6 +1,9 @@
 #Jeden z dłuższych projektów. Kod stworzony w 2020 roku, nie odświeżany od tamtego czasu, w tym momencie poprawiłbym te dziwne ify przez sprawdzanie odwrotnych stwierdzeń (np. 'if player's world is "1v1":' zamienił na sprawdzenie czy gracz nie jest w świecie '1v1' co w przypadku prawdy odsyłałoby wiadomość, że znajduje się w złym świecie i 'stop' który nie pozwalał dalszą egzekucje kodu, a oszczędziłoby wielokrotne tabowanie i zwiększyłoby przejrzystość kodu. Kod od 280 linijki był poprzednikiem 1v1, w aktualnej wersji nie działa.
 options:
     prefix: &f[&b1v1&f]
+    wrongworldmessage: &cWejdź do lobby 1v1 &6/warp 1v1&c, aby móć walczyć na arenie 1v1
+    alreadyinqueue: &cJesteś już w kolejce
+    alreadyingame: &cNie możesz dołączyć do kolejki podczas walki
 
 on load:
     loop {1v1::walka::wgrze::*}:
@@ -21,42 +24,43 @@ command /1v1:
     permission: 1v1.gracz
     permission message: Nie masz uprawnień!
     trigger:
-        if player's world is "1v1":
-            if {1v1::kolejka::wkolejce::%player%} is not set:
-                if {1v1::walka::wgrze::%player%} is not set:
-                    if {1v1::graczewkolejce} < 0:
-                        set {1v1::graczewkolejce} to 0
-                    add 1 to {1v1::graczewkolejce}
-                    set {1v1::kolejka::numer::%player%} to {1v1::graczewkolejce}
-                    set {1v1::kolejka::wkolejce::%player%} to player
-                    wait 5 ticks
-                    if {1v1::graczewkolejce} is 1:
-                        if {1v1::arena} is "trwa":
-                            send "{@prefix} Arena jest zajęta"
-                            send "{@prefix} Jesteś jedynym graczem w kolejce"
-                            send "{@prefix} Oczekiwanie na drugiego gracza i wolną arene..."
-                        if {1v1::arena} is "wolna":
-                            send "{@prefix} Arena jest wolna, ale nie ma dla ciebie przeciwnika"
-                            send "{@prefix} Jesteś jedynym graczem w kolejce"
-                            send "{@prefix} Czekamy na drugiego gracza, nie opuszczaj lobby"
-                    if {1v1::graczewkolejce} is 2:
-                        if {1v1::arena} is "wolna":
-                            if {1v1::pojedynekzzaproszenia} is not set:
-                                make console execute command "/1v1start"
-                        else:
-                            send "{@prefix} Przeciwnik już czeka, czekamy na zwolnienie się areny"
-                            loop {1v1::kolejka::wkolejce::*}:
-                                if loop-value is player:
-                                    send "{@prefix} Znaleziono przeciwnika, czekamy na zwolnienie areny" to loop-value
-                    send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
-                    broadcast "{@prefix} Gracz &6%player% &fdołączył do kolejki &b1v1"
-                else:
-                    send "{@prefix} &cNie możesz dołączyć do kolejki podczas walki"
+        if player's world is not "1v1":
+            send "{@prefix} {@wrongworldmessage}"
+            stop
+        if {1v1::kolejka::wkolejce::%player%} is set:
+            send "{@prefix} {@alreadyinqueue}"
+            stop
+        if {1v1::walka::wgrze::%player%} is not set:
+            send "{@prefix} {@alreadyingame}"
+            stop
+        if {1v1::graczewkolejce} < 0:
+            set {1v1::graczewkolejce} to 0
+        add 1 to {1v1::graczewkolejce}
+        set {1v1::kolejka::numer::%player%} to {1v1::graczewkolejce}
+        set {1v1::kolejka::wkolejce::%player%} to player
+        wait 5 ticks
+        if {1v1::graczewkolejce} is 1:
+            if {1v1::arena} is "trwa":
+                send "{@prefix} Arena jest zajęta"
+                send "{@prefix} Jesteś jedynym graczem w kolejce"
+                send "{@prefix} Oczekiwanie na drugiego gracza i wolną arene..."
+            if {1v1::arena} is "wolna":
+                send "{@prefix} Arena jest wolna, ale nie ma dla ciebie przeciwnika"
+                send "{@prefix} Jesteś jedynym graczem w kolejce"
+                send "{@prefix} Czekamy na drugiego gracza, nie opuszczaj lobby"
+        if {1v1::graczewkolejce} is 2:
+            if {1v1::arena} is "wolna":
+                if {1v1::pojedynekzzaproszenia} is not set:
+                    make console execute command "/1v1start"
             else:
-                send "{@prefix} &cJesteś już w kolejce"
-        else:
-            send "{@prefix} &cWejdź do lobby 1v1 &6/warp 1v1&c, aby móć walczyć na arenie 1v1"
-        stop
+                send "{@prefix} Przeciwnik już czeka, czekamy na zwolnienie się areny"
+                loop {1v1::kolejka::wkolejce::*}:
+                    if loop-value is player:
+                        send "{@prefix} Znaleziono przeciwnika, czekamy na zwolnienie areny" to loop-value
+        send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
+        broadcast "{@prefix} Gracz &6%player% &fdołączył do kolejki &b1v1"
+    else:
+        send "{@prefix} &cNie możesz dołączyć do kolejki podczas walki"
 
 command /1v1start:
     permission: 1v1.admin
@@ -196,7 +200,7 @@ on player world change:
     stop
 
 on death:
-    if {1v1::walka::wgrze::%player%} is set:
+    if {1v1::walka::wgrze::%victim%} is set:
         clear victim's inventory
         make victim execute command "/1v1opusc"
     stop
