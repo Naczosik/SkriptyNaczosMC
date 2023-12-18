@@ -71,7 +71,7 @@ command /1v1:
         if {1v1::graczewkolejce} is 2:
             if {1v1::arena} is "wolna":
                 if {1v1::pojedynekzzaproszenia} is not set:
-                    make console execute command "/1v1start"
+                    duelstart()
             else:
                 send "{@prefix} Przeciwnik już czeka, czekamy na zwolnienie się areny"
                 loop {1v1::kolejka::wkolejce::*}:
@@ -79,27 +79,23 @@ command /1v1:
         send "{@prefix} Numer w kolejce: &6%{1v1::kolejka::numer::%player%}% &f/ &6%{1v1::graczewkolejce}%"
         broadcast "{@prefix} Gracz &6%player% &fdołączył do kolejki &b1v1"
 
-command /1v1start:
-    permission: 1v1.admin
-    permission message: Nie masz uprawnień!
-    trigger:
-        if {1v1::graczewkolejce} < 2:
-            stop
-        if {1v1::arena} is "wolna":
-            set {1v1::arena} to "trwa"
-            loop {1v1::kolejka::wkolejce::*}:
-                if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
-                    send "{@prefix} &fArena rozpocznie się za &a3 &fsekundy" to loop-value
-                    play sound "BLOCK_NOTE_PLING" with volume 100 with pitch 1 at loop-value for loop-value
-            wait 3 seconds
-            loop {1v1::kolejka::wkolejce::*}:
-                if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
-                    set {_gracz} to loop-value
-                    duelkit({_gracz}, {1v1::kolejka::numer::%loop-value%})
-            reduce {1v1::graczewkolejce} by 2
-            loop {1v1::kolejka::wkolejce::*}:
-                reduce {1v1::kolejka::numer::%loop-value%} by 2
-                send "{@prefix} Twoje miejsce w kolejce: &6%{1v1::kolejka::numer::%loop-value%}%&f/&6%{1v1::graczewkolejce}%" to loop-value
+function duelstart():
+    if {1v1::graczewkolejce} < 2:
+        stop
+    if {1v1::arena} is "wolna":
+        set {1v1::arena} to "trwa"
+        loop {1v1::kolejka::wkolejce::*}:
+            if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
+                send "{@prefix} &fArena rozpocznie się za &a3 &fsekundy" to loop-value
+        wait 3 seconds
+        loop {1v1::kolejka::wkolejce::*}:
+            if {1v1::kolejka::numer::%loop-value%} is 1 or 2:
+                set {_gracz} to loop-value
+                duelkit({_gracz}, {1v1::kolejka::numer::%loop-value%})
+        reduce {1v1::graczewkolejce} by 2
+        loop {1v1::kolejka::wkolejce::*}:
+            reduce {1v1::kolejka::numer::%loop-value%} by 2
+            send "{@prefix} Twoje miejsce w kolejce: &6%{1v1::kolejka::numer::%loop-value%}%&f/&6%{1v1::graczewkolejce}%" to loop-value
 
 function duelkit(duelplayer: player, duelnumber: integer):
     teleport {_duelplayer} to {1v1::spawn::%{_duelnumber}%}
@@ -119,39 +115,36 @@ function duelkit(duelplayer: player, duelnumber: integer):
     set {1v1::walka::wgrze::%{_duelplayer}%} to {_duelplayer}
     delete {1v1::kolejka::wkolejce::%{_duelplayer}%}
     delete {1v1::kolejka::numer::%{_duelplayer}%}
+    play sound "BLOCK_NOTE_PLING" with volume 100 with pitch 1 at {_duelplayer} for {_duelplayer}
 
-
-command /1v1opusc:
-    permission: 1v1.gracz
-    permission message: Nie masz uprawnień!
-    trigger:
-        if {1v1::walka::wgrze::%player%} is set:
-            add 1 to {1v1::gracz::przegrane::%player%}
-            loop {1v1::walka::wgrze::*}:
-                teleport loop-value to {1v1::spawn::koniec}
-                clear loop-value's inventory
-            wait 1 tick
-            delete {1v1::walka::wgrze::%player%}
-            loop {1v1::walka::wgrze::*}:
-                set {_wygrany} to loop-value
-                #new
-                set {_zyciewygranego} to ((rounded up ({_wygrany}'s health*2))/2)
-                #set {_zyciewygranego} to rounded {_wygrany}'s health
-                broadcast "{@prefix} &a&l%loop-value% (❤ %{_zyciewygranego}%) &fwygrał pojedynek z &c&l%player%"
-                delete {1v1::walka::wgrze::%loop-value%}
-                add 1 to {1v1::gracz::wygrane::%loop-value%}
-            set {1v1::arena} to "wolna"
-            wait 3 seconds
-            make console execute command "/1v1start"
-        if {1v1::kolejka::wkolejce::%player%} is set:
-            loop {1v1::kolejka::wkolejce::*}:
-                if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%player%}:
-                    reduce {1v1::kolejka::numer::%loop-value%} by 1
-            reduce {1v1::graczewkolejce} by 1
-            delete {1v1::kolejka::wkolejce::%player%}
-            delete {1v1::kolejka::numer::%player%}
-            send "{@prefix} Opuściłeś kolejke"
-        stop
+function duelleave(duelplayer: player):
+    if {1v1::walka::wgrze::%{_duelplayer}%} is set:
+        add 1 to {1v1::gracz::przegrane::%{_duelplayer}%}
+        loop {1v1::walka::wgrze::*}:
+            teleport loop-value to {1v1::spawn::koniec}
+            clear loop-value's inventory
+        wait 1 tick
+        delete {1v1::walka::wgrze::%{_duelplayer}%}
+        loop {1v1::walka::wgrze::*}:
+            set {_wygrany} to loop-value
+            #new
+            set {_zyciewygranego} to ((rounded up ({_wygrany}'s health*2))/2)
+            #set {_zyciewygranego} to rounded {_wygrany}'s health
+            broadcast "{@prefix} &a&l%loop-value% (❤ %{_zyciewygranego}%) &fwygrał pojedynek z &c&l%{_duelplayer}%"
+            delete {1v1::walka::wgrze::%loop-value%}
+            add 1 to {1v1::gracz::wygrane::%loop-value%}
+        set {1v1::arena} to "wolna"
+        wait 3 seconds
+        make console execute command "/1v1start"
+    if {1v1::kolejka::wkolejce::%{_duelplayer}%} is set:
+        loop {1v1::kolejka::wkolejce::*}:
+            if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%{_duelplayer}%}:
+                reduce {1v1::kolejka::numer::%loop-value%} by 1
+        reduce {1v1::graczewkolejce} by 1
+        delete {1v1::kolejka::wkolejce::%{_duelplayer}%}
+        delete {1v1::kolejka::numer::%{_duelplayer}%}
+        send "{@prefix} Opuściłeś kolejke" to {_duelplayer}
+    stop
 
 command /1v1numer:
     permission: 1v1.gracz
