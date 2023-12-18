@@ -13,18 +13,16 @@ options:
     1v1chestplate: diamond chestplate of protection 4 and unbreaking 3
     1v1leggings: diamond leggings of protection 4 and unbreaking 3
     1v1boots: diamond boots of protection 4 and unbreaking 3
-
-variables:
-    {1v1slot0} = netherite sword of sharpness 5 and unbreaking 3
-    {1v1slot1} = 2 splash potion of strong regeneration
-    {1v1slot2} = 3 golden apple
-    {1v1slot3} = 5 golden carrot
-    {1v1slot4} = false
-    {1v1slot5} = false
-    {1v1slot6} = false
-    {1v1slot7} = false
-    {1v1slot8} = false
-    {1v1slot9} = false
+    1v1slot0: netherite sword of sharpness 5 and unbreaking 3
+    1v1slot1: 2 splash potion of strong regeneration
+    1v1slot2: 3 golden apple
+    1v1slot3: 5 golden carrot
+    1v1slot4: bow of power 5
+    1v1slot5: 10 arrows
+    1v1slot6: false
+    1v1slot7: false
+    1v1slot8: false
+    1v1slot9: false
 
 on load:
     loop {1v1::walka::wgrze::*}:
@@ -39,6 +37,16 @@ on load:
     set {1v1::arena} to "wolna"
     set {1v1::graczewkolejce} to 0
     broadcast "{@prefix} Przeładowano 1v1"
+    set {1v1slot::0} to {@1v1slot0}
+    set {1v1slot::1} to {@1v1slot1}
+    set {1v1slot::2} to {@1v1slot2}
+    set {1v1slot::3} to {@1v1slot3}
+    set {1v1slot::4} to {@1v1slot4}
+    set {1v1slot::5} to {@1v1slot5}
+    set {1v1slot::6} to {@1v1slot6}
+    set {1v1slot::7} to {@1v1slot7}
+    set {1v1slot::8} to {@1v1slot8}
+    set {1v1slot::9} to {@1v1slot9}
     stop
 
 command /1v1:
@@ -105,8 +113,8 @@ function duelkit(duelplayer: player, duelnumber: integer):
     clear potion effects of {_duelplayer}
     loop 10 times:
         set {_s} to loop-number - 1
-        if {1v1slot%{_s}%} is not false:
-            give {1v1slot%{_s}%} to {_duelplayer}
+        if {1v1slot::%{_s}%} is not false:
+            give {1v1slot::%{_s}%} to {_duelplayer}
     equip {_duelplayer} with {@1v1helmet}
     equip {_duelplayer} with {@1v1chestplate}
     equip {_duelplayer} with {@1v1leggings}
@@ -135,7 +143,7 @@ function duelleave(duelplayer: player):
             add 1 to {1v1::gracz::wygrane::%loop-value%}
         set {1v1::arena} to "wolna"
         wait 3 seconds
-        make console execute command "/1v1start"
+        duelstart()
     if {1v1::kolejka::wkolejce::%{_duelplayer}%} is set:
         loop {1v1::kolejka::wkolejce::*}:
             if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%{_duelplayer}%}:
@@ -157,19 +165,19 @@ on disconnect:
     if {1v1::duel::zaproszenie::%player%::*} is set:
         delete {1v1::duel::zaproszenie::%player%::*}
     if {1v1::walka::wgrze::%player%} is set:
-        add 1 to {1v1::gracz::przegrane::%player%}
-        loop {1v1::walka::wgrze::*}:
-            teleport loop-value to {1v1::spawn::koniec}
-            clear loop-value's inventory
-        wait 1 tick
-        delete {1v1::walka::wgrze::%player%}
-        loop {1v1::walka::wgrze::*}:
-            broadcast "{@prefix} &a&l%loop-value% &fwygrał pojedynek z &c&l%player%"
-            delete {1v1::walka::wgrze::%loop-value%}
-            add 1 to {1v1::gracz::wygrane::%loop-value%}
-        set {1v1::arena} to "wolna"
-        wait 3 seconds
-        make console execute command "/1v1start"
+        duelleave(event-player)
+        # add 1 to {1v1::gracz::przegrane::%player%}
+        # loop {1v1::walka::wgrze::*}:
+        #     teleport loop-value to {1v1::spawn::koniec}
+        #     clear loop-value's inventory
+        # wait 1 tick
+        # delete {1v1::walka::wgrze::%player%}
+        # loop {1v1::walka::wgrze::*}:
+        #     broadcast "{@prefix} &a&l%loop-value% &fwygrał pojedynek z &c&l%player%"
+        #     delete {1v1::walka::wgrze::%loop-value%}
+        #     add 1 to {1v1::gracz::wygrane::%loop-value%}
+        # set {1v1::arena} to "wolna"
+        # wait 3 seconds
     if {1v1::kolejka::wkolejce::%player%} is set:
         loop {1v1::kolejka::wkolejce::*}:
             if {1v1::kolejka::numer::%loop-value%} > {1v1::kolejka::numer::%player%}:
@@ -183,18 +191,20 @@ on disconnect:
 on player world change:
     wait 1 tick
     if {1v1::kolejka::wkolejce::%player%} is set:
-        make player execute command "/1v1opusc"
+        duelleave(event-player)
     else if {1v1::walka::wgrze::%player%} is set:
-        make player execute command "/1v1opusc"
+        duelleave(event-player)
     if {1v1::duel::zaproszenie::%player%::*} is set:
         delete {1v1::duel::zaproszenie::%player%::*}
     stop
 
-on death:
-    if {1v1::walka::wgrze::%victim%} is set:
-        clear victim's inventory
-        make victim execute command "/1v1opusc"
-    stop
+on damage:
+    if final damage > victim's health:
+        if {1v1::walka::wgrze::%victim%} is set:
+            clear victim's inventory
+            duelleave(victim)
+        cancel event
+        stop
 
 on drop:
     if {1v1::walka::wgrze::%player%} is set:
