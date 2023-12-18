@@ -2,79 +2,87 @@
 #statusy gier ::status :waiting, starting, ingame
 #teleporty kolorki: mid, spec,
 options:
-    kolorkiminplayers: 4 #minimalna wartość graczy
-    kolorkistartingtime: 10 #czas między osiagnieciem minimalnej wartości graczy a startem w sekundach
     notenoughtplayers: "Za mało graczy, aby wystartować..."
-    startingmessage: "Gra startuje za"
+    startingmessage: Gra startuje za
     alreadystartingmessage: "Gra już startuje, dodano do kolejki"
     alreadystartedgmessage: "Gra już trwa, dodano na widownie, dałączysz do kolejnej rozgrywki."
 
+variables:
+    {minigrykolorkiminplayers} = 4
+    {minigrykolorkistartingtime} = 10
+
 command /kolorki:
     trigger:
-        if {kolorki::status} is "starting":
-            teleport player to {kolorki::tp::mid}
-            set {kolorki::player::%player%} to "starting"
+        if {minigry::kolorki::status} is "starting":
+            teleport player to {minigry::kolorki::tp::mid}
+            set {minigry::kolorki::player::%player%} to "starting"
             send {@alreadystartingmessage}
-        if {kolorki::status} is "ingame":
-            teleport player to {kolorki::tp::spec}
-            set {kolorki::player::%player%} to "spec"
+        if {minigry::kolorki::status} is "ingame":
+            teleport player to {minigry::kolorki::tp::spec}
+            set {minigry::kolorki::player::%player%} to "spec"
             send {@alreadystartedgmessage}
-        if {kolorki::status} is "waiting":
-            teleport player to {kolorki::tp::mid}
-            set {kolorki::player::%player%} to "waiting"
-            loop {kolorki::player::*}:
+        if {minigry::kolorki::status} is "waiting":
+            teleport player to {minigry::kolorki::tp::mid}
+            set {minigry::kolorki::player::%player%} to "waiting"
+            loop {minigry::kolorki::player::*}:
                 add 1 to {_countwaiting}
-            if {_countwaiting} < {@kolorkiminplayers}:
+            if {_countwaiting} < {@minigrykolorkiminplayers}:
                 send {@notenoughtplayers}
                 stop
-            loop {kolorki::player::*}:
-                set {kolorki::player::%loop-index%} to "starting"
-            set {kolorki::status} to "starting"
-            loop {@kolorkistartingtime} times:
+            loop {minigry::kolorki::player::*}:
+                set {minigry::kolorki::player::%loop-index%} to "starting"
+            set {minigry::kolorki::status} to "starting"
+            loop {@minigrykolorkistartingtime} times:
                 set {_countwaiting} to 0
-                loop {kolorki::player::*}:
+                loop {minigry::kolorki::player::*}:
                     add 1 to {_countwaiting}
-                    if {_countwaiting} < {@kolorkiminplayers}:
+                    if {_countwaiting} < {@minigrykolorkiminplayers}:
                         send {@notenoughtplayers}
-                        set {kolorki::status} to "waiting"
+                        set {minigry::kolorki::status} to "waiting"
                         stop
-                    send "%{@startingmessage}% %{kolorkistartingtime}%-%loop-index-1%..." to loop-index-2 parsed as player
+                    set {_timeleft} to {@minigrykolorkistartingtime} - loop-number-1
+                    set {_p} to loop-index parsed as player
+                    send "{@startingmessage} %{_timeleft}%..." to {_p}
                 wait 1 second
-            loop {kolorki::player::*}:
-                teleport loop-index parsed as player to {kolorki::tp::mid}
-                set {kolorki::player::%loop-index%} to "ingame"
-            set {kolorki::status} to "ingame"
-function minigame(minigamename: text, minigameplayer: player = event-player):
-    if {%_minigamename%::status} is "starting":
-        teleport player to {%{_minigamename}%::tp::mid}
-        set {%{_minigamename}%::player::%player} to "starting"
+            loop {minigry::kolorki::player::*}:
+                teleport loop-index parsed as player to {minigry::kolorki::tp::mid}
+                set {minigry::kolorki::player::%loop-index%} to "ingame"
+            set {minigry::kolorki::status} to "ingame"
+
+
+
+function minigame(minigamename: text, minigameplayer: player):
+    if {minigry::%{_minigamename}%::status} is "starting":
+        teleport {_minigameplayer} to {minigry::%{_minigamename}%::tp::mid}
+        set {minigry::%{_minigamename}%::player::%{_minigameplayer}%} to "starting"
         send {@alreadystartingmessage} to {_minigameplayer}
-    if {%{_minigamename}%::status} is "ingame":
-        teleport player to {%{_minigamename}%::tp::spec}
-        set {%{_minigamename}%::player::%player} to "spec"
+    if {minigry::%{_minigamename}%::status} is "ingame":
+        teleport {_minigameplayer} to {minigry::%{_minigamename}%::tp::spec}
+        set {minigry::%{_minigamename}%::player::%{_minigameplayer}%} to "spec"
         send {@alreadystartedgmessage} to {_minigameplayer}
-    if {%{_minigamename}%::status} is "waiting":
-        teleport player to {%{_minigamename}%::tp::mid}
-        set {%{_minigamename}%::player::%player%} to "waiting"
-        loop {%{_minigamename}%::player:*}:
+    if {minigry::%{_minigamename}%::status} is "waiting":
+        teleport {_minigameplayer} to {minigry::%{_minigamename}%::tp::mid}
+        set {minigry::%{_minigamename}%::player::%{_minigameplayer}%} to "waiting"
+        loop {minigry::%{_minigamename}%::player::*}:
             add 1 to {_countwaiting}
-        if {_countwaiting} < {@%{_minigamename}%minplayer}:
+        if {_countwaiting} < {minigry%{_minigamename}%minplayer}:
             send {@notenoughtplayers} to {_minigameplayer}
             stop
-        loop {%{_minigamename}%::player::*}:
-            set {%{_minigamename}%::player::%loop-index%} to "starting"
-        set {%{_minigamename}%::status} to "starting"
-        loop {@%{_minigamename}%startingtime} times:
+        loop {minigry::%{_minigamename}%::player::*}:
+            set {minigry::%{_minigamename}%::player::%loop-index%} to "starting"
+        set {minigry::%{_minigamename}%::status} to "starting"
+        loop {minigry%{_minigamename}%startingtime} times:
             set {_countwaiting} to 0
-            loop {%{_minigamename}%::player::*}:
+            loop {minigry::%{_minigamename}%::player::*}:
                 add 1 to {_countwaiting}
-                if {_countwaiting} < {@%{_minigamename}%minplayer}:
-                    send {@notenoughtplayers} to loop-index-2 parsed as player
-                    set {%{_minigamename}%::status} to "waiting"
+                if {_countwaiting} < {minigry%{_minigamename}%minplayer}:
+                    send {@notenoughtplayers} to loop-index parsed as player
+                    set {minigry::%{_minigamename}%::status} to "waiting"
                     stop
-                send "%{@startingmessage}% %{%{_minigamename}%startingtime}-loop-index%..." to loop-index-2 parsed as player
+                set {_timeleft} to {@minigrykolorkistartingtime} - loop-number-1
+                send "{@startingmessage} %{_timeleft}%..." to loop-index parsed as player
             wait 1 second
-        loop {%{_minigamename}%::player::*}:
-            teleport player to 
-            set loop-value to "ingame"
-        set {%{_minigamename}%::status} to "ingame"
+        loop {minigry::%{_minigamename}%::player::*}:
+            teleport {_minigameplayer} to {minigry::%{_minigamename}%::tp::mid}
+            set {minigry::%{_minigamename}%::player::%loop-index%} to "ingame"
+        set {minigry::%{_minigamename}%::status} to "ingame"
