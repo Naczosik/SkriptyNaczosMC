@@ -130,6 +130,8 @@ function duelleave(duelplayer: player):
         add 1 to {1v1::gracz::przegrane::%{_duelplayer}%}
         loop {1v1::walka::wgrze::*}:
             teleport loop-value to {1v1::spawn::koniec}
+            heal loop-value
+            feed loop-value
             clear loop-value's inventory
         wait 1 tick
         delete {1v1::walka::wgrze::%{_duelplayer}%}
@@ -187,6 +189,8 @@ on player world change:
     stop
 
 on damage:
+    victim is player
+    victim's world is "1v1"
     if final damage > victim's health:
         if {1v1::walka::wgrze::%victim%} is set:
             clear victim's inventory
