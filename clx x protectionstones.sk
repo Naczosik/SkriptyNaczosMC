@@ -1,0 +1,7 @@
+#anulowanie stawiania bloku działki w world podczas walki
+on place of emerald ore:
+    event-block's lore is set
+    event-world is "world"
+    placeholder "combatlogx_status" from player is "&cWalka"
+    send "Nie można stawiać bloków działki podczas PVP"
+    cancel event
