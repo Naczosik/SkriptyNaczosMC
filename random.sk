@@ -1,10 +1,12 @@
 options:
     prefix: "&dNaczos&f&lMC &f
     throwmessage: %player% rzuca kostką ryzykując %arg 2%$..."
-    throwlose: %player% przegrał %arg 2%$!"
-    throwwin: %player% wygrał %arg 2 * 2%$!"
-    toobigbid: Nie masz tyle na koncie!"
+    throwlose: &c%player% przegrał %arg 2%$!"
+    throwwin: &a%player% wygrał %arg 2 * 2%$!"
+    toobigbid: &cNie masz tyle na koncie!"
+    throwcooldown: 1 minute
 command /rzutmoneta <text> <number>:
+    cooldown: {@throwcooldown}
     permission: naczosmc.rzutmoneta
     usage: /rzutmoneta <orzel/reszka> <kwota>
     trigger:
