@@ -1,0 +1,23 @@
+options:
+    prefix: "&dNaczos&f&lMC &f
+    throwmessage: %player% rzuca kostką ryzykując %arg 2%$..."
+    throwlose: %player% przegrał %arg 2%$!"
+    throwwin: %player% wygrał %arg 2 * 2%$!"
+command /rzutmoneta <text> <number>:
+    permission: naczosmc.rzutmoneta
+    usage: /rzutmoneta <orzel/reszka> <kwota>
+    trigger:
+        reduce player's balance by arg 2
+        broadcast {@prefix}{@throwmessage}
+        wait 3 seconds
+        set {_moneta} to 1 or 2
+        if {_moneta} is 1:
+            add arg 2 * 2 to player's balance
+            broadcast {@prefix}{@throwwin}
+            add 1 to {rzutmoneta::wins::%player%}
+            add arg 2 to {rzutmoneta::winamount::%player%}
+            stop
+        broadcast {@prefix}{@throwlose}
+        add 1 to {rzutmoneta::loses::%player%}
+        add arg 2 to {rzutmoneta::loseamount::%player%}
+        stop
