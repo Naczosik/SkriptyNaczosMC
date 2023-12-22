@@ -3,10 +3,14 @@ options:
     throwmessage: %player% rzuca kostką ryzykując %arg 2%$..."
     throwlose: %player% przegrał %arg 2%$!"
     throwwin: %player% wygrał %arg 2 * 2%$!"
+    toobigbid: Nie masz tyle na koncie!"
 command /rzutmoneta <text> <number>:
     permission: naczosmc.rzutmoneta
     usage: /rzutmoneta <orzel/reszka> <kwota>
     trigger:
+        if arg 2 > player's balance:
+            send {@prefix}{@toobigbid}
+            stop
         reduce player's balance by arg 2
         broadcast {@prefix}{@throwmessage}
         wait 3 seconds
