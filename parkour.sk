@@ -1,0 +1,56 @@
+options:
+    firstline: [PARKOUR]
+    thirdlinestart: START
+    thirdlineend: KONIEC
+    parkourworld: parkour
+    exeptregion: spawn
+    prefix: &dNaczos&f&lMC &f
+    parkourcompletedmessage: &aGracz %player% ukończył parkour w czasie %{_time}%!
+    startmessage: &aSTART!
+    unregisteredparkour: &aParkour %line 2 of clicked block% nie jest zarejestrowanym parkourem.
+    parkourcompletedpersonalbestmessage:&aTO JEST REKORD PERSONALNY!
+    givename: &cPodaj nazwe parkoura!
+    succesfulregistered: &aZarejestrowano parkour %arg 2%
+on rightclick on sign:
+    line 1 of clicked block is "{@firstline}"
+    if player's world isn't "{@parkourworld}":
+        if "%region at player%" doesn't contain "{@exeptregion}":
+            stop
+    loop {parkour::parkourlist::*}:
+        if loop-index is line 2 of clicked block:
+            add 1 to {_check}
+            exit loop
+    if {_check} is not 1:
+        send "{@prefix}{@unregisteredparkour}"
+        stop
+    if line 3 of clicked block is "{@thirdlinestart}":
+        set {parkour::%player%::%line 2 of clicked block%} to now
+        send "{@prefix}{@startmessage}"
+        cancel event
+        stop
+    if line 3 of clicked block is "{@thirdlineend}":
+        set {_time} to difference between now and {parkour::%player%::%line 2 of clicked block%}
+        delete {parkour::%player%::%line 2 of clicked block%}
+        broadcast "{@prefix}{@parkourcompletedmessage}"
+        if {parkour::personalbest::%player%::%line 2 of clicked block%} is not set:
+            set {parkour::personalbest::%player%::%line 2 of clicked block%} to {_time}
+            broadcast "{@prefix}{@parkourcompletedpersonalbestmessage}"
+            cancel event
+            stop
+        if {_time} is more than {parkour::personalbest::%player%::%line 2 of clicked block%}:
+            cancel event
+            stop
+        broadcast "{@prefix}{@parkourcompletedpersonalbestmessage}"
+        set {parkour::personalbest::%player%::%line 2 of clicked block%} to {_time}
+        cancel event
+        stop
+command /parkouradmin [<text>] [<text>]:
+    permission: naczosmc.parkour.admin
+    trigger:
+        if arg 1 is "register":
+            if arg 2 is not set:
+                send "{@prefix} {@givename}"
+                stop
+            set {parkour::parkourlist::%arg 2%} to true
+            send "{@prefix} {@succesfulregistered}"
+            stop
