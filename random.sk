@@ -1,16 +1,18 @@
 options:
     prefix: &dNaczos&f&lMC &f
-    throwmessage: %player% rzuca kostką ryzykując %arg 2%$...
+    throwmessage: %player% rzuca monetą ryzykując %arg 2%$...
     throwlose: &c%player% przegrał %arg 2%$!
     throwwin: &a%player% wygrał %arg 2 * 2%$!
-    toobigbid: &cNie masz tyle na koncie!
     throwcooldown: 1 minute
+    throwusage: /rzutmoneta <orzel/reszka/staty> <kwota>
     minbid: 10
     toosmallbid: &cMusisz postawić conajmniej 10!
-command /rzutmoneta <text> [<number>]:
+    toobigbid: &cNie masz tyle na koncie!
+
+command /rzutmoneta [<text>] [<number>]:
     cooldown: {@throwcooldown}
     permission: naczosmc.rzutmoneta
-    usage: /rzutmoneta <orzel/reszka/staty> <kwota>
+    usage: {@throwusage}
     trigger:
         if arg 1 is "staty":
             send "{@prefix} &a%{rzutmoneta::winamount::%player%}%$&7/&c%{rzutmoneta::loseamount::%player%}%$ &7(&a%{rzutmoneta::wins::%player%}%&7/&c%{rzutmoneta::loses::%player%}%&7)"
@@ -24,8 +26,16 @@ command /rzutmoneta <text> [<number>]:
             send "{@prefix}{@toobigbid}"
             cancel cooldown
             stop
+        if arg 1 is not "orzel" or "reszka" or "staty":
+            send "{@prefix}{@throwusage}"
+            cancel cooldown
+            stop
+        if arg 2 is not set:
+            send "{@prefix}{@toosmallbid}"
+            cancel cooldown
+            stop
         reduce player's balance by arg 2
-        broadcast "{@prefix}{@throwmessage}"
+        send "{@prefix}{@throwmessage}"
         wait 3 seconds
         set {_moneta} to 1 or 2
         if {_moneta} is 1:
