@@ -1,6 +1,5 @@
 #statusy ::player::* :waiting, starting, ingame, spec
 #statusy gier ::status :waiting, starting, ingame
-
 options:
     notenoughtplayers: Za mało graczy, aby wystartować...
     startingmessage: Gra startuje za
@@ -13,18 +12,14 @@ options:
     kolorkitimeafterremoval: 2
     kolorkiwinnermsg: Arene wygrał &a
     kolorkiwinnertime: 5
+    kolorkiadminlookup: Stworzono warstwy pomocnicze, wzory wklejaj pod dolną warstwę
+    kolorkilosemsg: Gracz %{_loseplayer}% spadł!
+    kolorkiadmincount: Liczba wykrytych wzorów
     nowinners: Brak zwycięzców
-    kolorkilosemsg: Gracz %player% spadł!
+    adminset: Ustawiono
 on skript load:
     set {minigry::kolorki::minplayers} to {@minigrykolorkiminplayers}
     set {minigry::kolorki::startingtime} to {@minigrykolorkistartingtime}
-
-command /kolorki:
-    trigger:
-        set {_p} to event-player
-        minigamestart("kolorki", {_p})
-        kolorki()
-
 function minigamestart(minigamename: text, minigameplayer: player):
     #SPRAWDZENIE STATUSU GRY
     if {minigry::%{_minigamename}%::status} is "starting":
@@ -60,19 +55,24 @@ function minigamestart(minigamename: text, minigameplayer: player):
                     stop
                 set {_timeleft} to {minigry::%{_minigamename}%::startingtime} - loop-number-1
                 send "{@startingmessage} %{_timeleft}%..." to loop-index parsed as player
-
+command /kolorki:
+    trigger:
+        set {_p} to event-player
+        minigamestart("kolorki", {_p})
+        kolorki()
 #::tp: mid, spec, lobby
 #::mapcount
 #::player::*
 function kolorki():
     set {minigry::kolorki::status} to "ingame"
     #tp na środek
+    set {minigry::kolorki::countplayer} to 0
     loop {minigry::kolorki::player::*}:
         teleport loop-index parsed as player to {minigry::kolorki::tp::mid}
         set {minigry::kolorki::player::%loop-index%} to "ingame"
-        add 1 to {_countplayers}
+        add 1 to {minigry::kolorki::countplayer}
     #kod gry
-    while {_countplayers} > 1:
+    while {minigry::kolorki::countplayer} > 1:
         #numer rundy
         add 1 to {_round}
         #losowanie wzoru
@@ -107,12 +107,42 @@ function kolorki():
         #czas po usunieciu
         wait {@kolorkitimeafterremoval} seconds
         #liczenie graczy
-        set {_countplayers} to 0
-        loop {minigry::kolorki::player::*}:
-            if loop-value is "ingame":
-                add 1 to {_countplayers}
-    #wybór wygranego
-    if {_countplayers} = 1:
+        # set {minigry::kolorki::countplayer} to 0
+        # loop {minigry::kolorki::player::*}:
+        #     if loop-value is "ingame":
+        #         add 1 to {minigry::kolorki::countplayer}
+    #brak wygranego
+    # if {minigry::kolorki::countplayer} < 1:
+    #     loop {minigry::kolorki::player::*}:
+    #         send "{@nowinners}" to loop-index parsed as player
+    #     set {minigry::kolorki::status} to "free"
+    #     loop {minigry::kolorki::player::*}:
+    #         teleport loop-index parsed as player to {minigry::global::tp::lobby}
+#przegrana kolorki
+on enter region:
+    wait 1 tick
+    if "%region at player%" contains "kolorkilose":
+        set event-player to {_p}
+        kolorkilose({_p})
+on quit:
+    if {minigry::kolorki::player::%player%} is "ingame":
+        set event-player to {_p}
+        kolorkilose({_p})
+on kick:
+    if {minigry::kolorki::player::%player%} is "ingame":
+        set event-player to {_p}
+        kolorkilose({_p})
+function kolorkilose(loseplayer: player):
+    set {minigry::kolorki::player::%{_loseplayer}%} to "spec"
+    teleport {_loseplayer} to {minigry::kolorki::tp::spec}
+    #liczenie graczy
+    set {_c} to 0
+    loop {minigry::kolorki::player::*}:
+        if loop-value is "ingame":
+            add 1 to {_c}
+    set {minigry::kolorki::countplayer} to {_c}
+    #wybieranie wygranego
+    if {minigry::kolorki::countplayer} = 1:
         loop {minigry::kolorki::player::*}:
             if loop-value is "ingame":
                 set {_winner} to loop-index parsed as player
@@ -122,17 +152,48 @@ function kolorki():
         set {minigry::kolorki::status} to "free"
         loop {minigry::kolorki::player::*}:
             teleport loop-index parsed as player to {minigry::global::tp::lobby}
-    #brak wygranego
-    if {_countplayers} < 1:
-        loop {minigry::kolorki::player::*}:
-            send "{@nowinners}" to loop-index parsed as player
-        set {minigry::kolorki::status} to "free"
-        loop {minigry::kolorki::player::*}:
-            teleport loop-index parsed as player to {minigry::global::tp::lobby}
-on enter region:
-    wait 1 second
-    if "%region at player%" contains "kolorkilose":
-        set {minigry::kolorki::player::%player%} to "spec"
-        teleport player to {minigry::kolorki::tp::spec}
-        loop {minigry::kolorki::player::*}:
-            send "{@kolorkilosemsg}" to loop-index parsed as player
+    loop {minigry::kolorki::player::*}:
+        send "{@kolorkilosemsg}" to loop-index parsed as player
+command /kolorkiadmin [<text>] [<text>]:
+    permission: naczosmc.kolorki.admin
+    trigger:
+        if arg 1 is "check":
+            send "{minigry::kolorki::tp::mid} %{minigry::kolorki::tp::mid}%"
+            send "{minigry::kolorki::tp::spec} %{minigry::kolorki::tp::spec}%"
+            send "{minigry::kolorki::tp::lobby} %{minigry::kolorki::tp::lobby}%"
+            send "{minigry::kolorki::pos::1} %{minigry::kolorki::pos::1}%"
+            send "{minigry::kolorki::pos::2} %{minigry::kolorki::pos::2}%"
+            send "{minigry::kolorki::mapcount} %{minigry::kolorki::mapcount}%"
+            stop
+        if arg 1 is "set":
+            if arg 2 is "mid" or "spec" or "lobby":
+                set {minigry::kolorki::tp::%arg 2%} to player's location
+                send "{@adminset} %arg 2%"
+                stop
+            if arg 2 is "1" or "2":
+                set {minigry::kolorki::pos::%arg 2%} to player's location
+                send "{@adminset} %arg 2%"
+                stop
+            else:
+                send "/kolorkiadmin set mid/spec/lobby/1/2"
+                stop
+        if arg 1 is "lookup":
+            loop blocks within {minigry::kolorki::pos::1} and {minigry::kolorki::pos::2}:
+                set block 25 + {_map} under loop-block to wool
+                set loop-block to wool
+                send "{@kolorkiadminlookup}"
+                stop
+        if arg 1 is "countlayers":
+            set {_l} to true
+            while {_l} is true:
+                set {_c} to 1
+                if block 25 + {_c} under {minigry::kolorki::pos::1} is not air:
+                    add 1 to {_c}
+                else:
+                    reduce {_c} by 1
+                    set {_l} to false
+            set {minigry::kolorki::mapcount} to {_c}
+            send "{@kolorkiadmincount} %{_c}%"
+            stop
+        else:
+            send "/kolorkiadmin check/set/lookup/countlayers"
