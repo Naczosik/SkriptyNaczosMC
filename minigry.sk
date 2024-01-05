@@ -1,12 +1,16 @@
 #statusy ::player::* :waiting, starting, ingame, spec
 #statusy gier ::status :waiting, starting, ingame
 options:
+    #zmienne ogólne
     notenoughtplayers: Za mało graczy, aby wystartować...
     startingmessage: Gra startuje za
     alreadystartingmessage: Gra już startuje, dodano do kolejki
     alreadystartedgmessage: Gra już trwa, dodano na widownie, dałączysz do kolejnej rozgrywki.
-    minigrykolorkiminplayers: 4
-    minigrykolorkistartingtime: 10
+    nowinners: Brak zwycięzców
+    adminset: Ustawiono
+    #zmienne kolorki
+    kolorkiminplayers: 4
+    kolorkistartingtime: 10
     kolorkiblockmsg: Wybrany blok &a
     kolorkitimemsg: Czas &c
     kolorkitimeafterremoval: 2
@@ -15,12 +19,14 @@ options:
     kolorkiadminlookup: Stworzono warstwy pomocnicze, wzory wklejaj pod dolną warstwę
     kolorkilosemsg: Gracz %{_loseplayer}% spadł!
     kolorkiadmincount: Liczba wykrytych wzorów
-    nowinners: Brak zwycięzców
-    adminset: Ustawiono
-on skript load:
-    set {minigry::kolorki::minplayers} to {@minigrykolorkiminplayers}
-    set {minigry::kolorki::startingtime} to {@minigrykolorkistartingtime}
-function minigamestart(minigamename: text, minigameplayer: player):
+    #zmienne most
+    mostminplayers: 4
+    moststartingtime: 10
+    mostdepth: 4
+    mostwaittimebeforeremoval: 3
+    mostemptyspacesmsg: Procent zniszczeń &c
+    mosttimemsg: Czas &c
+function fminigamestart(minigamename: text, minigameplayer: player, minplayers: number, startingtime: number):
     #SPRAWDZENIE STATUSU GRY
     if {minigry::%{_minigamename}%::status} is "starting":
         teleport {_minigameplayer} to {minigry::%{_minigamename}%::tp::mid}
@@ -36,7 +42,7 @@ function minigamestart(minigamename: text, minigameplayer: player):
         #POLICZENIE GRACZY NA ARENIE
         loop {minigry::%{_minigamename}%::player::*}:
             add 1 to {_countwaiting}
-        if {_countwaiting} < {minigry::%{_minigamename}%::minplayer}:
+        if {_countwaiting} < {_minplayers}:
             send "{@notenoughtplayers}" to {_minigameplayer}
             stop
         #ZMIANA STATUSU GRACZY I MAPY NA STARTING 
@@ -44,33 +50,33 @@ function minigamestart(minigamename: text, minigameplayer: player):
             set {minigry::%{_minigamename}%::player::%loop-index%} to "starting"
         set {minigry::%{_minigamename}%::status} to "starting"
         #ODLICZANIE DO STARTU + CHECK CZY KTOS NIE WYSZEDŁ
-        loop {minigry::%{_minigamename}%::startingtime} times:
+        loop {_startingtime} times:
             wait 1 second
             set {_countwaiting} to 0
             loop {minigry::%{_minigamename}%::player::*}:
                 add 1 to {_countwaiting}
-                if {_countwaiting} < {minigry::%{_minigamename}%::minplayer}:
+                if {_countwaiting} < {_minplayers}:
                     send "{@notenoughtplayers}" to loop-index parsed as player
                     set {minigry::%{_minigamename}%::status} to "waiting"
                     stop
-                set {_timeleft} to {minigry::%{_minigamename}%::startingtime} - loop-number-1
+                set {_timeleft} to {_startingtime} - loop-number-1
                 send "{@startingmessage} %{_timeleft}%..." to loop-index parsed as player
+        set {minigry::most::status} to "ingame"
+        set {minigry::most::countplayer} to 0
+        loop {minigry::kolorki::player::*}:
+            teleport loop-index parsed as player to {minigry::kolorki::tp::mid}
+            set {minigry::kolorki::player::%loop-index%} to "ingame"
+            add 1 to {minigry::kolorki::countplayer}
+#kolorki
 command /kolorki:
     trigger:
         set {_p} to event-player
-        minigamestart("kolorki", {_p})
-        kolorki()
+        fminigamestart("kolorki", {_p}, {@kolorkiminplayers}, {@kolorkistartingtime})
+        fkolorki()
 #::tp: mid, spec, lobby
 #::mapcount
 #::player::*
-function kolorki():
-    set {minigry::kolorki::status} to "ingame"
-    #tp na środek
-    set {minigry::kolorki::countplayer} to 0
-    loop {minigry::kolorki::player::*}:
-        teleport loop-index parsed as player to {minigry::kolorki::tp::mid}
-        set {minigry::kolorki::player::%loop-index%} to "ingame"
-        add 1 to {minigry::kolorki::countplayer}
+function fkolorki():
     #kod gry
     while {minigry::kolorki::countplayer} > 1:
         #numer rundy
@@ -83,9 +89,9 @@ function kolorki():
         #liczenie czasu
         if {_round} = 1:
             set {_roundtime} to 5 seconds
-        set {_multipliertime} to random integer between 1 and 8
-        set {_reducedtime} to "%0.05 * {_multipliertime}% seconds"
-        set {_roundtime} to {_roundtime} - {_reducedtime}
+        else:
+            set {_multipliertime} to random integer between 1 and 8
+            set {_roundtime} to {_roundtime} - 0.05 * {_multipliertime}
         #wybieranie bloku
         loop blocks within {minigry::kolorki::pos::1} and {minigry::kolorki::pos::2}:
             if loop-block is not barrier:
@@ -99,7 +105,7 @@ function kolorki():
             loop 9 times:
                 set slot loop-number - 1 of loop-index-1 parsed as player's inventory to {_block}
         #poczekanie czasu
-        wait {_roundtime}
+        wait {_roundtime} seconds
         #usuwanie niewybranych bloków
         loop blocks within {minigry::kolorki::pos::1} and {minigry::kolorki::pos::2}:
             if loop-block is not {_block}:
@@ -197,3 +203,48 @@ command /kolorkiadmin [<text>] [<text>]:
             stop
         else:
             send "/kolorkiadmin check/set/lookup/countlayers"
+#most
+command /most:
+    trigger:
+        set {_p} to event-player
+        fminigamestart("most", {_p} {@mostminplayers}, {@moststartingtime})
+        fmost({@mostdepth})
+function fmost(depth: number):
+    #kod gry
+    set {_countblocks} to number of blocks within {minigry::most::pos::toplayer::1} and {minigry::most::pos::toplayer::2}
+    while {minigry::most::countplayer} > 1:
+        #numer rundy
+        add 1 to {_round}
+        #liczenie czasu i losowanie ubytków
+        if {_round} = 1:
+            set {_roundtime} to 15
+            set {_emptyspaces} to 0.1
+        else:
+            set {_multipliertime} to random integer between 5 and 20
+            set {_roundtime} to {_roundtime} - 0.05 * {_multipliertime}
+            set {_multiplieremptyspaces} to random integer between 1 and 10
+            set {_emptyspaceslimit} to {_emptyspaceslimit} + 0.01 * {_multiplieremptyspaces}
+        set {_cap} to {_emptyspaceslimit} * {_countblocks}
+        set {_deletedblocks} to 0
+        #wiadmość jaki procent zniszczeń i czas
+        loop {minigry::kolorki::player::*}:
+            send "{@mostemptyspacesmsg} %{_emptyspaceslimit}*100% " to loop-index parsed as player
+            send "{@mosttimemsg} %{_roundtime}%" to loop-index parsed as player
+        #krótki waittime
+        wait {@mostwaittimebeforeremoval} seconds
+        #usuwanie bloków
+        while {_cap} >= {_deletedblocks}:
+            loop blocks within {minigry::most::pos::toplayer::1} and {minigry::most::pos::toplayer::2}:
+                chance of {_emptyspaceslimit} * 0,8:
+                    if loop-block is not air:
+                        set loop-block to air
+                        loop {_deph} times:
+                            set loop-block to air
+                        add 1 to {_deletedblocks}
+                        if {_cap} < {_deletedblocks}:
+                            exit 1 loop
+        #poczekanie czasu na dobiegnięcie
+        wait {_roundtime} seconds
+funciton mostlose(loseplayer: player):
+    set {minigry::kolorki::player::%{_loseplayer}%} to "spec"
+    teleport {_loseplayer} to {minigry::kolorki::tp::spec}
