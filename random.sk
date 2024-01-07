@@ -1,5 +1,5 @@
 options:
-    prefix: &dNaczos&f&lMC &f
+    prefix: &d/Rzut&f&lkostka &f
     throwmessage: %player% rzuca monetą ryzykując %arg 2%$...
     throwlose: &c%player% przegrał %arg 2%$!
     throwwin: &a%player% wygrał %arg 2 * 2%$!
@@ -7,7 +7,9 @@ options:
     throwusage: /rzutmoneta <orzel/reszka/staty> <kwota>
     minbid: 10
     toosmallbid: &cMusisz postawić conajmniej 10!
-    toobigbid: &cNie masz tyle na koncie!
+    maxbid: 2000
+    toobigbid: &c Możesz obstawić maksymalnie
+    notenoughbal: &cNie masz tyle na koncie!
 
 command /rzutmoneta [<text>] [<number>]:
     cooldown: {@throwcooldown}
@@ -22,8 +24,12 @@ command /rzutmoneta [<text>] [<number>]:
             send "{@prefix}{@toosmallbid}"
             cancel cooldown
             stop
+        if arg 2 > {@maxbid}:
+            send "{@prefix}{@toobigbid} {@maxbid}"
+            cancel cooldown
+            stop
         if arg 2 > player's balance:
-            send "{@prefix}{@toobigbid}"
+            send "{@prefix}{@notenoughbal}"
             cancel cooldown
             stop
         if arg 1 is not "orzel" or "reszka" or "staty":
