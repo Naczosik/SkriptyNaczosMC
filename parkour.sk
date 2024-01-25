@@ -1,4 +1,5 @@
 options:
+    #PARKOUR SIGNS
     firstline: [PARKOUR]
     thirdlinestart: START
     thirdlineend: KONIEC
@@ -9,8 +10,21 @@ options:
     startmessage: &aSTART!
     unregisteredparkour: &aParkour %line 2 of clicked block% nie jest zarejestrowanym parkourem.
     parkourcompletedpersonalbestmessage:&aTO JEST REKORD PERSONALNY!
+    #COMMAND /PARKOURADMIN
     givename: &cPodaj nazwe parkoura!
     succesfulregistered: &aZarejestrowano parkour %arg 2%
+    #PARKOUR MENU
+    parkourmenuname: Parkour
+    playerrecordsslot: 11
+    playerrecordsslotname: Twoje rekordy
+    playerrecordsslotlore: Sprawdź swoje rekody na parkourach
+    parkourtpsslot: 13
+    parkourtpsslotname: Teleportuj się na parkour
+    parkourrecordsslot: 15
+    parkourrecordsslotname: Rekordy parkourów
+    parkourrecordslore: Twój rekord
+    backslotname: Wróć
+    tobeannounced: niebawem...
 on rightclick on sign:
     line 1 of clicked block is "{@firstline}"
     if player's world isn't "{@parkourworld}":
@@ -54,3 +68,39 @@ command /parkouradmin [<text>] [<text>]:
             set {parkour::parkourlist::%arg 2%} to true
             send "{@prefix} {@succesfulregistered}"
             stop
+
+on inventory click: # Listen for players clicking in an inventory.
+    name of event-inventory is "{@parkourmenuname}" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    if index of event-slot is {@playerrecordsslot}:
+        playerrecords({_p})
+    if index of event-slot is {@parkourtpsslot}:
+        send "x"
+    if index of event-slot is {@parkourrecordsslot}:
+        send "x"
+on inventory click: # Listen for players clicking in an inventory.
+    name of event-inventory is "{@playerrecordsslotname}" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    if index of event-slot is (round(size of {parkour::parkourlist::*}/9) + 1)*9-1:
+        parkourmainmenu({_p})
+function parkourmainmenu(pplayer: player):
+    set {_menu} to a new chest inventory with 3 row named "{@parkourmenuname}"
+    set slot {@playerrecordsslot} of {_menu} to apple named "&f{@playerrecordsslotname}" with lore "&f{@playerrecordsslotlore}" # Slots are numbered 0, 1, 2...
+    set slot {@parkourtpsslot} of {_menu} to apple named "&f{@parkourtpsslotname}" with lore "&f{@tobeannounced}"
+    set slot {@parkourrecordsslot} of {_menu} to apple named "&f{@parkourrecordsslotname}"  with lore "&f{@tobeannounced}"
+    open {_menu} to {_pplayer}
+function playerrecords(pplayer: player):
+    set {_r} to round(size of {parkour::parkourlist::*}/9) + 1
+    set {_last} to {_r}*9-1
+    set {_menu} to a new chest inventory with {_r} row named "{@playerrecordsslotname}"
+    set {_s} to 0 
+    loop {parkour::parkourlist::*}:
+        set slot {_s} of {_menu} to paper named "&f%loop-index%" with lore "&f{@parkourrecordslore} %{parkour::personalbest::%{_pplayer}%::%loop-index%}%"
+    set slot {_last} of {_menu} to apple named "&f{@backslotname}"
+    open {_menu} to {_pplayer}
+command /parkour [<text>]:
+    trigger:
+        set {_p} to player
+        parkourmainmenu({_p})
