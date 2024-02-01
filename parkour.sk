@@ -1,18 +1,23 @@
 options:
+    #GENERAL
+    prefix: &dNaczos&f&lMC &f
+    tobeannounced: niebawem...
     #PARKOUR SIGNS
     firstline: [PARKOUR]
     thirdlinestart: START
     thirdlineend: KONIEC
     parkourworld: parkour
     exeptregion: spawn
-    prefix: &dNaczos&f&lMC &f
     parkourcompletedmessage: &aGracz %player% ukończył parkour w czasie %{_time}%!
     startmessage: &aSTART!
     unregisteredparkour: &aParkour %line 2 of clicked block% nie jest zarejestrowanym parkourem.
     parkourcompletedpersonalbestmessage:&aTO JEST REKORD PERSONALNY!
     #COMMAND /PARKOURADMIN
+    adminhelp: &cPoprawne użycie
     givename: &cPodaj nazwe parkoura!
     succesfulregistered: &aZarejestrowano parkour %arg 2%
+    succesfulunregistered: &cWyrejestrowano parkour %arg 2%
+    parkourlist: &aLista parkourów
     #PARKOUR MENU
     parkourmenuname: Parkour
     playerrecordsslot: 11
@@ -24,12 +29,13 @@ options:
     parkourrecordsslotname: Rekordy parkourów
     parkourrecordslore: Twój rekord
     backslotname: Wróć
-    tobeannounced: niebawem...
 on rightclick on sign:
     line 1 of clicked block is "{@firstline}"
+    #check na dobry świat/exeptregion
     if player's world isn't "{@parkourworld}":
         if "%region at player%" doesn't contain "{@exeptregion}":
             stop
+    #check na zarejestrowany parkour
     loop {parkour::parkourlist::*}:
         if loop-index is line 2 of clicked block:
             add 1 to {_check}
@@ -37,23 +43,28 @@ on rightclick on sign:
     if {_check} is not 1:
         send "{@prefix}{@unregisteredparkour}"
         stop
+    #startowanie
     if line 3 of clicked block is "{@thirdlinestart}":
         set {parkour::%player%::%line 2 of clicked block%} to now
         send "{@prefix}{@startmessage}"
         cancel event
         stop
+    #koniec
     if line 3 of clicked block is "{@thirdlineend}":
         set {_time} to difference between now and {parkour::%player%::%line 2 of clicked block%}
         delete {parkour::%player%::%line 2 of clicked block%}
         broadcast "{@prefix}{@parkourcompletedmessage}"
+        #check na pierwszy wynik
         if {parkour::personalbest::%player%::%line 2 of clicked block%} is not set:
             set {parkour::personalbest::%player%::%line 2 of clicked block%} to {_time}
             broadcast "{@prefix}{@parkourcompletedpersonalbestmessage}"
             cancel event
             stop
+        #check na najlepszy wynik
         if {_time} is more than {parkour::personalbest::%player%::%line 2 of clicked block%}:
             cancel event
             stop
+        #powiadomienie o rekordzie i ustawienie nowego
         broadcast "{@prefix}{@parkourcompletedpersonalbestmessage}"
         set {parkour::personalbest::%player%::%line 2 of clicked block%} to {_time}
         cancel event
@@ -61,14 +72,29 @@ on rightclick on sign:
 command /parkouradmin [<text>] [<text>]:
     permission: naczosmc.parkour.admin
     trigger:
+        if arg 1 is not set:
+            send "{@prefix} {@adminhelp} /parkouradmin register/list"
+        #rejestrowanie
         if arg 1 is "register":
+            #check na wysłanie nazwy
             if arg 2 is not set:
                 send "{@prefix} {@givename}"
                 stop
+            #check czy jest ustawiony
+            if {parkour::parkourlist::%arg 2%} is set:
+                delete {parkour::parkourlist::%arg 2%}
+                send "{@prefix} {@succesfulunregistered}"
+                stop
+            #ustawianie na true
             set {parkour::parkourlist::%arg 2%} to true
             send "{@prefix} {@succesfulregistered}"
             stop
-
+        #lista parkourów
+        if arg 1 is "list":
+            send "{@prefix} {@parkourlist}"
+            loop {parkour::parkourlist::*}:
+                send "{@prefix} %loop-index%"
+                stop
 on inventory click: # Listen for players clicking in an inventory.
     name of event-inventory is "{@parkourmenuname}" # Make sure it's our menu.
     set {_p} to player
