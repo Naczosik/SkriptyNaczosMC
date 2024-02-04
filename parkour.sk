@@ -1,11 +1,12 @@
 options:
     #GENERAL
     prefix: &dNaczos&f&lMC &f
-    tobeannounced: niebawem...
+    tobeannounced: &cniebawem...
     #PARKOUR SIGNS
     firstline: [PARKOUR]
     thirdlinestart: START
     thirdlineend: KONIEC
+    thirdlineback: POWROT
     parkourworld: parkour
     exeptregion: spawn
     parkourcompletedmessage: &aGracz %player% ukończył parkour w czasie %{_time}%!
@@ -15,20 +16,27 @@ options:
     #COMMAND /PARKOURADMIN
     adminhelp: &cPoprawne użycie
     givename: &cPodaj nazwe parkoura!
-    succesfulregistered: &aZarejestrowano parkour %arg 2%
-    succesfulunregistered: &cWyrejestrowano parkour %arg 2%
+    notp: &cPrzed zarejestrowaniem parkoura ustaw teleport /parkouradmin settp %arg 2% 
+    successfulregistered: &aZarejestrowano parkour %arg 2%
+    successfulunregistered: &cWyrejestrowano parkour %arg 2%
+    successfulsettp: &aUstawiono teleport parkour %arg 2%
     parkourlist: &aLista parkourów
     #PARKOUR MENU
     parkourmenuname: Parkour
     playerrecordsslot: 11
+    playerrecordsslotitem: Pumpkin Pie
     playerrecordsslotname: Twoje rekordy
-    playerrecordsslotlore: Sprawdź swoje rekody na parkourach
+    playerrecordsslotlore: &7Sprawdź swoje rekody na parkourach
     parkourtpsslot: 13
+    parkourtpsslotitem: Pufferfish
     parkourtpsslotname: Teleportuj się na parkour
     parkourrecordsslot: 15
+    parkourrecordsslotitem: Chorus fruit
     parkourrecordsslotname: Rekordy parkourów
-    parkourrecordslore: Twój rekord
+    parkourrecordslore: &7Twój rekord
+    parkournorecord: &cBrak rekordu na tym parkourze!
     backslotname: Wróć
+    backslotitem: Ink Sac
 on rightclick on sign:
     line 1 of clicked block is "{@firstline}"
     #check na dobry świat/exeptregion
@@ -51,6 +59,7 @@ on rightclick on sign:
         stop
     #koniec
     if line 3 of clicked block is "{@thirdlineend}":
+        teleport player to {parkour::tp::%line 2 of clicked block%}
         set {_time} to difference between now and {parkour::%player%::%line 2 of clicked block%}
         delete {parkour::%player%::%line 2 of clicked block%}
         broadcast "{@prefix}{@parkourcompletedmessage}"
@@ -69,11 +78,15 @@ on rightclick on sign:
         set {parkour::personalbest::%player%::%line 2 of clicked block%} to {_time}
         cancel event
         stop
+    #powrot na początek
+    if line 3 of clicked block is "{@thirdlineback}":
+        teleport player to {parkour::tp::%line 2 of clicked block%}
+
 command /parkouradmin [<text>] [<text>]:
     permission: naczosmc.parkour.admin
     trigger:
         if arg 1 is not set:
-            send "{@prefix} {@adminhelp} /parkouradmin register/list"
+            send "{@prefix} {@adminhelp} /parkouradmin register/list/settp"
         #rejestrowanie
         if arg 1 is "register":
             #check na wysłanie nazwy
@@ -83,50 +96,97 @@ command /parkouradmin [<text>] [<text>]:
             #check czy jest ustawiony
             if {parkour::parkourlist::%arg 2%} is set:
                 delete {parkour::parkourlist::%arg 2%}
-                send "{@prefix} {@succesfulunregistered}"
+                send "{@prefix} {@successfulunregistered}"
                 stop
             #ustawianie na true
+            #test na ustawienie tp
+            if {parkour::tp::%arg 2%} is not set:
+                send "{@prefix} {@notp}"
+                stop
             set {parkour::parkourlist::%arg 2%} to true
-            send "{@prefix} {@succesfulregistered}"
+            send "{@prefix} {@successfulregistered}"
             stop
         #lista parkourów
         if arg 1 is "list":
             send "{@prefix} {@parkourlist}"
             loop {parkour::parkourlist::*}:
                 send "{@prefix} %loop-index%"
+        if arg 1 is "settp":
+            if arg 2 is not set:
+                send "{@prefix} {@givename}"
                 stop
-on inventory click: # Listen for players clicking in an inventory.
+            set {parkour::tp::%arg 2%} to player's location
+            send "{@prefix} {@successfulsettp}"
+            stop
+# MAIN MENU
+function parkourmainmenu(pplayer: player):
+    set {_menu} to a new chest inventory with 3 row named "{@parkourmenuname}"
+    set slot {@playerrecordsslot} of {_menu} to {@playerrecordsslotitem} named "&f{@playerrecordsslotname}" with lore "{@playerrecordsslotlore}" # Slots are numbered 0, 1, 2...
+    set slot {@parkourtpsslot} of {_menu} to {@parkourtpsslotitem} named "&f{@parkourtpsslotname}"# with lore "&f{@tobeannounced}"
+    set slot {@parkourrecordsslot} of {_menu} to {@parkourrecordsslotitem} named "&f{@parkourrecordsslotname}"  with lore "&f{@tobeannounced}"
+    open {_menu} to {_pplayer}
+
+command /parkour [<text>]:
+    trigger:
+        set {_p} to player
+        parkourmainmenu({_p})
+
+on inventory click:
     name of event-inventory is "{@parkourmenuname}" # Make sure it's our menu.
     set {_p} to player
     cancel event
     if index of event-slot is {@playerrecordsslot}:
         playerrecords({_p})
     if index of event-slot is {@parkourtpsslot}:
-        send "x"
+        tps({_p})
     if index of event-slot is {@parkourrecordsslot}:
         send "x"
-on inventory click: # Listen for players clicking in an inventory.
+
+# RECORDS
+on inventory click:
     name of event-inventory is "{@playerrecordsslotname}" # Make sure it's our menu.
     set {_p} to player
     cancel event
+    #przycisk powrotu
     if index of event-slot is (round(size of {parkour::parkourlist::*}/9) + 1)*9-1:
         parkourmainmenu({_p})
-function parkourmainmenu(pplayer: player):
-    set {_menu} to a new chest inventory with 3 row named "{@parkourmenuname}"
-    set slot {@playerrecordsslot} of {_menu} to apple named "&f{@playerrecordsslotname}" with lore "&f{@playerrecordsslotlore}" # Slots are numbered 0, 1, 2...
-    set slot {@parkourtpsslot} of {_menu} to apple named "&f{@parkourtpsslotname}" with lore "&f{@tobeannounced}"
-    set slot {@parkourrecordsslot} of {_menu} to apple named "&f{@parkourrecordsslotname}"  with lore "&f{@tobeannounced}"
-    open {_menu} to {_pplayer}
+
 function playerrecords(pplayer: player):
     set {_r} to round(size of {parkour::parkourlist::*}/9) + 1
     set {_last} to {_r}*9-1
     set {_menu} to a new chest inventory with {_r} row named "{@playerrecordsslotname}"
     set {_s} to 0 
     loop {parkour::parkourlist::*}:
-        set slot {_s} of {_menu} to paper named "&f%loop-index%" with lore "&f{@parkourrecordslore} %{parkour::personalbest::%{_pplayer}%::%loop-index%}%"
-    set slot {_last} of {_menu} to apple named "&f{@backslotname}"
+        set {_l} to "{@parkourrecordslore} %{parkour::personalbest::%{_pplayer}%::%loop-index%}%"
+        if {parkour::personalbest::%{_pplayer}%::%loop-index%} is not set:
+            set {_l} to "{@parkournorecord}"
+        set slot {_s} of {_menu} to paper named "&f%loop-index%" with lore {_l}
+        add 1 to {_s}
+    set slot {_last} of {_menu} to {@backslotitem} named "&f{@backslotname}"
     open {_menu} to {_pplayer}
-command /parkour [<text>]:
-    trigger:
-        set {_p} to player
+
+# TPS
+on inventory click:
+    name of event-inventory is "{@parkourtpsslotname}" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    #przycisk powrotu
+    if index of event-slot is (round(size of {parkour::parkourlist::*}/9) + 1)*9-1:
         parkourmainmenu({_p})
+        stop
+    if index of event-slot is less than (round(size of {parkour::parkourlist::*}/9) + 1)*9-1:
+        if {parkour::tpsmenuslots::%index of event-slot%} is set:
+            teleport player to {parkour::tp::%{parkour::tpsmenuslots::%index of event-slot%}%}
+
+function tps(pplayer: player):
+    delete {parkour::tpsmenuslots::*}
+    set {_r} to round(size of {parkour::parkourlist::*}/9) + 1
+    set {_last} to {_r}*9-1
+    set {_menu} to a new chest inventory with {_r} row named "{@parkourtpsslotname}"
+    set {_s} to 0 
+    loop {parkour::parkourlist::*}:
+        set slot {_s} of {_menu} to paper named "&f%loop-index%" #with lore "{@parkourrecordslore} %{parkour::personalbest::%{_pplayer}%::%loop-index%}%"
+        set {parkour::tpsmenuslots::%{_s}%} to loop-index
+        add 1 to {_s}
+    set slot {_last} of {_menu} to {@backslotitem} named "&f{@backslotname}"
+    open {_menu} to {_pplayer}
