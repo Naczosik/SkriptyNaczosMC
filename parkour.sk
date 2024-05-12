@@ -13,6 +13,7 @@ options:
     startmessage: &aSTART!
     unregisteredparkour: &aParkour %line 2 of clicked block% nie jest zarejestrowanym parkourem.
     parkourcompletedpersonalbestmessage:&aTO JEST REKORD PERSONALNY!
+    parkourcompletednotstarted:&cNie wystartowałeś liczenia, kliknij prawym przyciskiem myszy na tabliczekę START!
     #COMMAND /PARKOURADMIN
     adminhelp: &cPoprawne użycie
     givename: &cPodaj nazwe parkoura!
@@ -60,6 +61,10 @@ on rightclick on sign:
     #koniec
     if line 3 of clicked block is "{@thirdlineend}":
         teleport player to {parkour::tp::%line 2 of clicked block%}
+        if {parkour::%player%::%line 2 of clicked block%} is not set:
+            send "{@prefix}{@parkourcompletednotstarted}"
+            cancel event
+            stop
         set {_time} to difference between now and {parkour::%player%::%line 2 of clicked block%}
         delete {parkour::%player%::%line 2 of clicked block%}
         broadcast "{@prefix}{@parkourcompletedmessage}"
