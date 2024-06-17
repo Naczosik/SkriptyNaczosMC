@@ -1,0 +1,33 @@
+options:
+    wrongworld: Villagry można kupować jedynie w światach survivalowych!
+    mainmenuname: Kup villagera
+    triggeritem: emerald
+    triggeritemname: Kup Villagera za
+    triggeritemlore: Kliknij, aby kupić jedno jajo villagera
+    villagercost: 10000
+    eggsold: Kupiłeś jajo
+    notenoughbalance: Nie stać cię!
+    notenoughtspace: Nie masz miejsca w ekwipunku!
+command /kupvillagera:
+    trigger:
+        if player's world is not "world" or "world_nether" or "world_the_end":
+            send "{@wrongworld}"
+            stop
+        set {_menu} to a new chest inventory with 3 row named "{@mainmenuname}"
+        set slot 13 of {_menu} to {@triggeritem} named "&f{@triggeritemname} &a{@villagercost}$" with lore "&7{@triggeritemlore}" # Slots are numbered 0, 1, 2...
+        open {_menu} to player
+on inventory click:
+    name of event-inventory is "{@mainmenuname}" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    if index of event-slot is 13:
+        if player's balance >= {@villagercost}:
+            if player has enough space for villager spawn egg:
+                reduce player's balance by {@villagercost}
+                give player 1 villager spawn egg
+                send "&a{@eggsold}"
+            else:
+                send "&c{@notenoughtspace}"
+        else:
+            send "&c{@notenoughbalance}"
+        close player's inventory
