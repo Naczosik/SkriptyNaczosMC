@@ -1,0 +1,98 @@
+options:
+    basesize: 2000 #np. 2000 -> 1000 w każdą strone
+    perblock: 50 #licząc zmiane o blok w każdą strone
+    wrongworld: Można powiększać, tylko kiedy jesteś w świecie survivalowym!
+    mainmenuname: Powiększanie borderu
+    triggeritemworld: grass block
+    triggeritemnether: netherrack
+    triggeritemend: end stone
+    triggeritemnameworld: Powiększ border w podstawowym świecie
+    triggeritemnamenether: Powiększ border w netherze
+    triggeritemnameend: Powiększ border w endzie
+    triggeritemlore: Powiększ świat za
+    menuworldname: Powiększ border
+    oneblockitem: lime concrete
+    tenblockitem: yellow concrete
+    hundredblockitem: red concrete
+    blocks: bloków!
+    triggeroneblockname: Powiększ świat %{_wworld}% o 1 blok!
+    triggertenblockname: Powiększ świat %{_wworld}% o 10 bloków!
+    triggerhundredblockname: Powiększ świat %{_wworld}% o 100 bloków!
+    triggeritemlore: Cena
+    buyslot1: 11
+    buyslot10: 13
+    buyslot100: 15
+    price1: 50
+    price10: 500
+    price100: 4500
+    notenoughtbalance: Nie masz wystarczających środków!
+    newsizemessage: Powiększono border do
+on load:
+    delete {border::added}
+    if {border::added::world} is not set:
+        set {border::added} to 0
+    if {border::added::world_nether} is not set:
+        set {border::added} to 0
+    if {border::added::world_the_end} is not set:
+        set {border::added} to 0
+command /powiekszborder [<text>]:
+    trigger:
+        if player's world is not "world" or "world_nether" or "world_the_end":
+            send "{@wrongworld}"
+            stop
+        set {_menu} to a new chest inventory with 3 row named "{@mainmenuname}"
+        set slot 11 of {_menu} to {@triggeritemworld} named "&f{@triggeritemnameworld}"
+        set slot 13 of {_menu} to {@triggeritemnether} named "&f{@triggeritemnamenether}"
+        set slot 15 of {_menu} to {@triggeritemend} named "&f{@triggeritemnameend}"
+        open {_menu} to player
+on inventory click:
+    name of event-inventory is "{@mainmenuname}" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    if index of event-slot is 11:
+        worldmenu("world", {_p})
+    if index of event-slot is 13:
+        worldmenu("nether", {_p})
+    if index of event-slot is 15:
+        worldmenu("end", {_p})
+on inventory click:
+    name of event-inventory is "{@menuworldname} world" or "{@menuworldname} nether" or "{@menuworldname} end" # Make sure it's our menu.
+    set {_p} to player
+    cancel event
+    if name of event-inventory is "{@menuworldname} world":
+        set {_world} to "world"
+    if name of event-inventory is "{@menuworldname} nether":
+        set {_world} to "world_nether"
+    if name of event-inventory is "{@menuworldname} end":
+        set {_world} to "world_the_end"
+    set {_index} to index of event-slot
+    if index of event-slot is {@buyslot1} or {@buyslot10} or {@buyslot100}:
+        buyborder({_world}, {_index}, {_p})
+
+function buyborder(wworld: string, iindex: integer, pplayer: player):
+    if {_iindex} is {@buyslot1}:
+        set {_n} to {@price1}
+        set {_multiplier} to 1
+    if {_iindex} is {@buyslot10}:
+        set {_n} to {@price10}
+        set {_multiplier} to 10
+    if {_iindex} is {@buyslot100}:
+        set {_n} to {@price100}
+        set {_multiplier} to 100
+    if {_pplayer}'s balance < {_n}:
+        send "&c{@notenoughtbalance}" to {_pplayer}
+        close {_pplayer}'s inventory
+        stop
+    reduce {_pplayer}'s balance by {_n}
+    add {_multiplier} to {border::added::%{_wworld}%}
+    set {_newsize} to {@basesize} + {border::added::%{_wworld}%} * 2
+    set border size of {_wworld} to {_newsize}
+    send "{@newsizemessage} +/- %{_newsize} / 2%" to {_pplayer}
+    close {_pplayer}'s inventory
+
+function worldmenu(wworld: string, pplayer: player):
+    set {_menu} to a new chest inventory with 3 row named "{@menuworldname} %{_wworld}%"
+    set slot {@buyslot1} of {_menu} to {@oneblockitem} named "&f{@triggeroneblockname}" with lore "&7{@triggeritemlore}: &a{@price1}$" # Slots are numbered 0, 1, 2...
+    set slot {@buyslot10} of {_menu} to {@tenblockitem} named "&f{@triggertenblockname}" with lore "&7{@triggeritemlore}: &a{@price10}$" # Slots are numbered 0, 1, 2...
+    set slot {@buyslot100} of {_menu} to {@hundredblockitem} named "&f{@triggerhundredblockname}" with lore "&7{@triggeritemlore}: &a{@price100}$" # Slots are numbered 0, 1, 2...
+    open {_menu} to {_pplayer}
