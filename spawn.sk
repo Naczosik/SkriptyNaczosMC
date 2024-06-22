@@ -1,0 +1,13 @@
+command /naczosmcadmin <text>:
+    usage: /naczosmcadmin <setspawnlocation>
+    permission: naczosmc.admin
+    trigger:
+        if arg-1 is "setspawnlocation":
+            set {naczosmc::spawnlocation} to player's location
+            send "Gotowe %arg-1%"
+
+on damage:
+    damage cause is void
+    victim's world is "spawn"
+    teleport victim to {naczosmc::spawnlocation}
+    cancel event
