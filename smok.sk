@@ -1,0 +1,11 @@
+options:
+    gaveelytra: &aOtrzymałeś elytrę za zabicie smoka!
+    droppedelytra: &aWyrzucono elytrę w twoim miejscu
+
+on death of ender dragon:
+    if attacker has enough space for elytra:
+        give attacker elytra
+        send "{@gaveelytra}" to attacker
+    else:
+        drop elytra at attacker's position
+        send "{@droppedelytra}" to attacker
