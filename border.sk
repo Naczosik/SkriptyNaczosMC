@@ -86,7 +86,7 @@ function buyborder(wworld: string, iindex: integer, pplayer: player):
     reduce {_pplayer}'s balance by {_n}
     add {_multiplier} to {border::added::%{_wworld}%}
     set {_newsize} to {@basesize} + {border::added::%{_wworld}%} * 2
-    set border size of {_wworld} to {_newsize}
+    set border size of {_wworld} to {_newsize} over 10 seconds
     send "{@newsizemessage} +/- %{_newsize} / 2%" to {_pplayer}
     close {_pplayer}'s inventory
 
