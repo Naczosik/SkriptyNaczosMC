@@ -1,34 +1,596 @@
-#niezautomatywana minigra do mapy Kassarixa, pozwalająca na podanie dokładnego odsetka bloków które znikają oraz na podanie dokładnego czasu danego graczą na przejście mostu
-command /most [<text>] [<number>] [<number>]:
+options:
+    firstlinemost: [most]
+    minigamesworld: event
+    percentage: procent
+    timeset: czas
+    seteventsign: ustawevent
+    eventmessage: &aEVENT %{_event}%, TEPNIJ NA SPAWNA I /EVENT
+    locationset: Ustawiono
+    startsign: start
+    startingin: Start za
+    startingtime: 3
+    startmessage: &aSTART!
+    bridgedepth: 5
+    depthofcopy: 20
+    loseregion: most_lost
+    notstarting: &cZaden event nie startuje!
+    tpspawn: TPSPAWN
+    tpevent: EVENT
+    firstlinekolorki: [kolorki]
+    firstlinetntrun: [tntrun]
+    wrongplaceeventcommand: &cKomenda dziala tylko na spawnie lub na swiecie eventowym!
+    blocknotfound: &cBrak bloku w patternie!
+    countmaps: policzmapy
+    noplayersleft: &cDziwna sprawa, brak graczy...
+    firstlineox: [ox]
+    falseline: falsz
+    trueline: prawda
+    annoucewinner: &fEvent %{_gametype}% wygrał
+    playersleftmsg: &fLiczba graczy
+    firstlinespleef: [spleef]
+    spleefstartingmsg: spleef startuje za 5 sekund
+##===================================ogolne===================================
+command /event:
+    trigger:
+        if "%region at player%" contains "spawn":
+            tpevent(event-player)
+        if event-player is in world "{@minigamesworld}":
+            tpevent(event-player)
+        else:
+            send "{@wrongplaceeventcommand}"
+        stop
+
+#===================================kolorki===================================
+    #regiony - kolorki, kolorki_gra, kolorki_tablica
+on rightclick on stone button:
+    #kolorki - tablica
+    #wybor bloku
+    if "%region at player%" contains "kolorki_tablica":
+        set {_b} to block behind event-block
+    else:
+        stop
+    #check czy jest blok w patternie
+    set {_check} to false
+    loop blocks within {kolorki::tp::kolorki1} and {kolorki::tp::kolorki2}:
+        if loop-block is type of {_b}:
+            set {_check} to true
+            exit loop
+    if {_check} is false:
+        send "{@blocknotfound}" to event-player
+        stop
+    delete {kolorki::starting}
+    loop all players in world "{@minigamesworld}":
+        clear loop-player's inventory
+        loop 9 times:
+            set slot loop-number - 1 of loop-player's inventory to {_b}
+    set {_t} to line 3 of block at {kolorki::tp::timesign} parsed as number
+    if {_t} is not an integer:
+        send "&c%{_t}%..."  to players in world "{@minigamesworld}"
+        set {_fracture} to floor({_t})
+        set {_fracture} to "%{_t} - {_fracture}% seconds"
+        wait {_fracture} parsed as timespan
+        #reduce {_t} by 0.5 
+        set {_t} to floor({_t})
+    loop {_t} times:
+        send "&c%{_t} - loop-number + 1%..."  to players in world "{@minigamesworld}"
+        play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+        wait 1 second
+    loop blocks within {kolorki::tp::kolorki1} and {kolorki::tp::kolorki2}:
+        if loop-block isn't type of {_b}:
+            set loop-block to air
+    play sound "block.piston.extend" at volume 0.3 for all players in world "{@minigamesworld}"
+    wait 3 seconds
+    loop all players in world "{@minigamesworld}":
+        clear loop-player's inventory
+    set {_randomdepth} to random integer between 1 and {kolorki::countmaps}
+    loop blocks within {kolorki::tp::kolorki1} and {kolorki::tp::kolorki2}:
+        set loop-block to block {@depthofcopy} + {_randomdepth} - 1 under the loop-block
+on rightclick on sign:
+    #kolorki - tablica
+    line 1 of clicked block is "{@firstlinekolorki}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    #tp na event
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #wlaczenie eventu
+    if line 2 of clicked block is "{@seteventsign}":
+        set {_event} to "KOLORKI"
+        send "{@eventmessage}" to all players
+        set {kolorki::starting} to true
+    #liczenie ile jest map na kolorkach
+    if line 2 of clicked block is "{@countmaps}":
+        set {_l} to true
+        set {_lvls} to 0
+        set {_d} to {@depthofcopy}
+        
+        while {_l} is true:
+            if block {_d} + {_lvls} under the block at {kolorki::tp::kolorki1} is not air:
+                add 1 to {_lvls}
+            else:
+                set {_l} to false
+        set {kolorki::countmaps} to {_lvls}
+        send "Ustawiono liczbe map %{kolorki::countmaps}%" to event-player
+    #ustawianie czasu
+    if line 2 of clicked block is "{@timeset}":
+        set {_p} to line 3 of clicked block parsed as number
+        reduce {_p} by 0.2
+        if {_p} < 0.5:
+            set {_p} to 4
+        set line 3 of clicked block to "%{_p}%"
+        stop
+command /kolorkiadmin [<text>]:
+    #kolorki - komenda admina
+    permission: minigry.admin
+    trigger:
+        if arg-1 is "tpevent" or "kolorki1" or "kolorki2" or "spec" or "timesign":
+            set {kolorki::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+        if arg-1 is "copy":
+            loop blocks within {kolorki::tp::kolorki1} and {kolorki::tp::kolorki2}:
+                set block {@depthofcopy} under the loop-block to loop-block
+on quit:
+    #kolorki - wyjscie
+    event-world is "{@minigamesworld}"
+    if "%region at player%" contains "kolorki_gra":
+        teleport event-player to {kolorki::tp::spec}
+on walk on bedrock:
+    #kolorki - przegrany normalnie
+    "%region at player%" contains "kolorki"
+    teleport player to {kolorki::tp::spec}
+#===================================most===================================
+    #regiony - most, most_gra, most_lost, most1, most2
+on rightclick on sign:
+    #most - tablica
+    line 1 of clicked block is "{@firstlinemost}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #percentage
+    if line 2 of clicked block is "{@percentage}":
+        set {_p} to line 3 of clicked block parsed as integer
+        reduce {_p} by 5
+        if {_p} < 5:
+            set {_p} to 100
+        set line 3 of clicked block to "%{_p}%"
+        stop
+    #time
+    if line 2 of clicked block is "{@timeset}":
+        set {_p} to line 3 of clicked block parsed as number
+        reduce {_p} by 0.5
+        if {_p} < 7:
+            set {_p} to 15
+        set line 3 of clicked block to "%{_p}%"
+        stop
+    #set event
+    if line 2 of clicked block is "{@seteventsign}":
+        set {most::dir} to 1
+        loop blocks within {most::tp::wall1_1} and {most::tp::wall1_2}:
+            if loop-block is air:
+                set loop-block to barrier
+        loop blocks within {most::tp::wall2_1} and {most::tp::wall2_2}:
+            if loop-block is barrier:
+                set loop-block to air
+        set {_event} to "MOST"
+        send "{@eventmessage}" to all players
+        set {most::starting} to true
+        stop
+    #start round
+    if line 2 of clicked block is "{@startsign}":
+        delete {most::starting}
+        set {_lim} to amount of blocks within {most::tp::most1} and {most::tp::most2}
+        set {_t} to line 3 of block at {most::tp::timesign} parsed as number
+        set {_p} to line 3 of block at {most::tp::percentagesign} parsed as number
+        set {_c} to 100 - {_p}
+        send "&c%{_p}%%% / %{_t}% s" to players in world "{@minigamesworld}"
+        #niszczenie dziurek
+        loop blocks within {most::tp::most1} and {most::tp::most2}:
+            chance of {_c}%:
+                set loop-block to air
+                loop {@bridgedepth} times:
+                    set block loop-number under loop-block to air
+                add 1 to {_deletedblocks}
+                if {_deletedblocks} >= {_lim}:
+                    exit loop
+        #czekanie na runde
+        loop {@startingtime} times:
+            play sound "entity.experience_orb.pickup" at volume 0.3 for all players in world "{@minigamesworld}"
+            send "&a{@startingin} %{@startingtime} - loop-number + 1%..." to players in world "{@minigamesworld}"
+            wait 1 second
+        send "{@startmessage}" to players in world "{@minigamesworld}"
+        #start rundy
+        play sound "entity.player.levelup" at volume 0.3 for all players in world "{@minigamesworld}"
+        loop blocks within {most::tp::wall1_1} and {most::tp::wall1_2}:
+            if loop-block is barrier:
+                set loop-block to air
+        loop blocks within {most::tp::wall2_1} and {most::tp::wall2_2}:
+            if loop-block is barrier:
+                set loop-block to air
+        if {_t} is not an integer:
+            send "&c%{_t}%..."  to players in world "{@minigamesworld}"
+            wait 0.5 second
+            reduce {_t} by 0.5
+        loop {_t} times:
+            send "&c%{_t} - loop-number + 1%..."  to players in world "{@minigamesworld}"
+            play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 1 second
+        #niszczenie full
+        play sound "block.piston.extend" at volume 0.3 for all players in world "{@minigamesworld}"
+        loop blocks within {most::tp::most1} and {most::tp::most2}:
+            set loop-block to air
+            loop {@bridgedepth} times:
+                set block loop-number under loop-block to air
+        loop blocks within {most::tp::wall1_1} and {most::tp::wall1_2}:
+            if loop-block is air:
+                set loop-block to barrier
+        loop blocks within {most::tp::wall2_1} and {most::tp::wall2_2}:
+            if loop-block is air:
+                set loop-block to barrier
+        wait 5 seconds
+        #usuwanie graczy którzy chcieli zostać  - to be done
+        loop all players:
+            if "%region at loop-player%" contains "most%{most::dir}%":
+                teleport loop-player to {most::tp::spec}
+        #przywracanie
+        play sound "block.piston.contract" for all players in world "{@minigamesworld}"
+        loop blocks within {most::tp::most1} and {most::tp::most2}:
+            set loop-block to block {@depthofcopy} under the loop-block
+            loop {@bridgedepth} times:
+                set block loop-number under the loop-block to block {@depthofcopy} + loop-number under loop-block
+        #stawianie odpowiedniego walla
+        if {most::dir} = 1:
+            set {most::dir} to 2
+        else:
+            set {most::dir} to 1
+        loop blocks within {most::tp::wall%{most::dir}%_1} and {most::tp::wall%{most::dir}%_2}:
+            if loop-block is air:
+                set loop-block to barrier
+        stop
+
+command /mostadmin [<text>]:
+    #most - komenda admina
     permission: most.admin
     trigger:
-        if arg 1 is "1":
-            set {tescior::pos::1} to location of block under player
-        if arg 1 is "2":
-            set {tescior::pos::2} to location of block under player
-            set {most::liczbablokow} to 0
-            loop blocks within {tescior::pos::1} and {tescior::pos::2}:
-                add 1 to {most::liczbablokow}
-        if arg 1 is "3":
-            #set {_count} to 0
-            #loop blocks within {tescior::pos::1} and {tescior::pos::2}:
-            #    add 1 to {_count}
-            #send "liczba bloków: %{_count}%"
-            #send "liczba bloków od usunięcia: %rounded {most::liczbablokow}*arg 2%"
-            send "&e&lPOZIOM ZNISZCZENIA MOSTU %arg 2*100% &e&l%%" to players in world "minigry"
-            send "&e&lCZAS: %arg 3% &e&lsek" to players in world "minigry"
-            #broadcast "&e&lPOZIOM ZNISZCZENIA MOSTU %arg 2*100% %%" to players in world "minigry"
-            #broadcast "&e&lCZAS: %arg 3% sek"
-            wait 5 seconds
-            loop rounded {most::liczbablokow}*(1-arg 2) times:
-                set {_ifdeleted} to 0
-                while {_ifdeleted} is 0:
-                    set {_deletingblock} to location of a random element out of blocks within {tescior::pos::1} and {tescior::pos::2}
-                    if block at {_deletingblock} is not white stained glass:
-                        set block at {_deletingblock} to white stained glass
-                        set {_ifdeleted} to 1
-            wait "%arg 3% seconds" parsed as timespan
-            #loop arg 2 times:
-            #    send action bar ""
-            loop blocks within {tescior::pos::1} and {tescior::pos::2}:
-                set loop-block to block 1 meters below loop-block
+        if arg-1 is "check":
+            send "{most::tp::tpevent} %{most::tp::tpevent}%"
+            send "{most::tp::most1} %{most::tp::most1}%"
+            send "{most::tp::most2} %{most::tp::most2}%"
+            send "{most::tp::wall1_1} %{most::tp::wall1_1}%"
+            send "{most::tp::wall1_2} %{most::tp::wall1_2}%"
+            send "{most::tp::wall2_1} %{most::tp::wall2_1}%"
+            send "{most::tp::wall2_2} %{most::tp::wall2_2}%"
+            send "{most::tp::percentagesign} %{most::tp::percentagesign}%"
+            send "{most::tp::timesign} %{most::tp::timesign}%"
+            send "{most::tp::1_1} %{most::tp::1_1}%"
+            send "{most::tp::1_2} %{most::tp::1_2}%"
+            send "{most::tp::2_1} %{most::tp::2_1}%"
+            send "{most::tp::2_2} %{most::tp::2_2}%"
+            send "{most::tp::spec} %{most::tp::spec}%"
+            stop
+            #regiony most1 - most2 - most_lost - most
+        if arg-1 is "tpevent" or "most1" or "most2" or "wall1_1" or "wall1_2" or "wall2_1" or "wall2_2" or "percentagesign" or "timesign" or "spec":
+            set {most::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+        if arg-1 is "copy":
+            loop blocks within {most::tp::most1} and {most::tp::most2}:
+                set block {@depthofcopy} under the loop-block to loop-block
+                loop {@bridgedepth} times:
+                    set block {@depthofcopy} + loop-number under loop-block to block loop-number under the loop-block
+
+on quit:
+    #most - wyjscie
+    event-world is "{@minigamesworld}"
+    if "%region at player%" contains "most_gra":
+        teleport event-player to {most::tp::spec}
+on enter region:
+    #most - przegrany normalnie
+    wait 1 tick
+    if "%region at player%" contains "most_lost":
+        teleport player to {most::tp::spec}
+
+#===================================tntrun===================================
+on walk on concrete powder:
+    #tntrun - fukcjonalnosc gry
+    #send "hehe" to event-player
+    event-world is "{@minigamesworld}"
+    {tntrun::on} is true
+    if "%region at player%" contains "tntrun_gra":
+        if block 2 blocks under the event-player is not tnt:
+            stop
+    else:
+        stop
+    set block under the event-player to air
+    set block 2 blocks under the event-player to air
+on rightclick on sign:
+    #tntrun - tablica
+    line 1 of clicked block is "{@firstlinetntrun}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    #tp na event
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #wlaczenie eventu
+    if line 2 of clicked block is "{@seteventsign}":
+        set {_event} to "tntrun"
+        send "{@eventmessage}" to all players
+        set {tntrun::starting} to true
+        delete {tntrun::on}
+    if line 2 of clicked block is "{@startsign}":
+        delete {tntrun::starting}
+        set {tntrun::on} to true
+command /tntrunadmin [<text>]:
+    #tntrun - komenda admina
+    permission: minigry.admin
+    trigger:
+        if arg-1 is "tpevent" or "spec":
+            set {tntrun::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+#tntrun - przegrany normalnie
+on quit:
+    #tntrun - wyjscie
+    event-world is "{@minigamesworld}"
+    if "%region at player%" contains "tntrun_gra":
+        teleport event-player to {tntrun::tp::spec}
+
+#===================================spleef===================================
+    #regiony - spleef, spleef_gra
+on projectile hit:
+    #spleef - sniezka
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    event-projectile is snowball
+    event-block is snow block
+    set event-block to air
+on break of snow block:
+    #spleef - rozkopywanie
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    {spleef::on} is true
+    add 1 snowball to player's inventory 
+    cancel event
+    set event-block to air
+on rightclick on sign:
+    #spleef - tablica
+    line 1 of clicked block is "{@firstlinespleef}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    #tp na event
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #wlaczenie eventu
+    if line 2 of clicked block is "{@seteventsign}":
+        set {_event} to "spleef"
+        send "{@eventmessage}" to all players
+        set {spleef::starting} to true
+        delete {spleef::on}
+    if line 2 of clicked block is "{@startsign}":
+        loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+            set loop-block to block 30 under the loop-block
+        send "{@spleefstartingmsg}" to all players
+        wait 5 seconds
+        delete {spleef::starting}
+        set {spleef::on} to true
+        loop all players:
+            if "%region at loop-player%" contains "spleef_gra":
+                give loop-player 1 iron shovel
+on quit:
+    #spleef - wyjscie
+    event-world is "{@minigamesworld}"
+    if "%region at player%" contains "spleef_gra":
+        teleport event-player to {spleef::tp::spec}
+        countplayers("spleef")
+on walk on bedrock:
+    #spleef - odpadniecie
+    "%region at player%" contains "spleef_gra"
+    teleport player to {spleef::tp::spec}
+    clear player's inventory
+    countplayers("spleef")
+command /spleefadmin [<text>]:
+    #spleef - komenda admina
+    permission: minigry.admin
+    trigger:
+        if arg-1 is "spleef1" or "spleef2" or "tpevent" or "spec":
+            set {spleef::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+        if arg-1 is "copy":
+            loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+                set block 30 blocks under loop-block to loop-block
+#===================================ox===================================
+on rightclick on sign:
+    line 1 of clicked block is "{@firstlineox}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    if line 2 of clicked block is "{@seteventsign}":
+        set {_event} to "PRAWDA/FAŁSZ"
+        send "{@eventmessage}" to all players
+        set {ox::starting} to true
+    #falsz
+    if line 2 of clicked block is "{@falseline}":
+        delete {ox::starting}
+        #znikanie graczy
+        loop all players:
+            if "%region at loop-player%" contains "ox_gra":
+                make loop-player invisible
+                add loop-player to {_invs::*}
+        #czekanie
+        set {_t} to 5
+        loop {_t} times:
+            send "&c%{_t} - loop-number + 1%..."  to players in world "{@minigamesworld}"
+            play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 1 second
+        #po uplywie czasu
+        #stawianie sciany
+        loop all players in world "{@minigamesworld}":
+            if loop-player's location is within {ox::tp::wall1} and block 4 blocks over {ox::tp::wall2}:
+                push loop-player left at speed 0.5
+        set {_h} to 0
+        loop 4 times:
+            if loop-number < 4:
+                loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                    set block {_h} blocks over loop-block to stone or cobblestone or light gray stained glass
+            if loop-number = 4:
+                loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                    set block {_h} blocks over loop-block to gray stained glass
+            add 1 to {_h}
+            play sound "block.piston.extend" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 5 ticks
+        #wylaczenie niewidki
+        loop {_invs::*}:
+            send "%loop-value%" to event-player
+            make loop-value visible
+        wait 3 second
+        #pokazanie wyniku
+        play sound "block.anvil.land" at volume 0.3 for all players in world "{@minigamesworld}"
+        loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
+            if loop-block is not polished basalt or andesite or cobblestone or stone or red terracotta or red concrete or pink terracotta:
+                set loop-block to air
+        wait 2 second
+        #usuwanie sciany
+        play sound "block.piston.contract" at volume 0.5 for all players in world "{@minigamesworld}"
+        set {_h} to 0
+        loop 4 times:
+            loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                set block {_h} blocks over loop-block to air
+            add 1 to {_h}
+        loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
+            set loop-block to block 30 blocks under the loop-block
+        countplayers("ox")
+    if line 2 of clicked block is "{@trueline}":
+        delete {ox::starting}
+        #znikanie graczy
+        loop all players:
+            if "%region at loop-player%" contains "ox_gra":
+                make loop-player invisible
+                add loop-player to {_invs::*}
+        #czekanie
+        set {_t} to 5
+        loop {_t} times:
+            send "&c%{_t} - loop-number + 1%..."  to players in world "{@minigamesworld}"
+            play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 1 second
+        #po uplywie czasu
+        #stawianie sciany
+        loop all players in world "{@minigamesworld}":
+            if loop-player's location is within {ox::tp::wall1} and block 4 blocks over {ox::tp::wall2}:
+                push loop-player left at speed 0.5
+        set {_h} to 0
+        loop 4 times:
+            if loop-number < 4:
+                loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                    set block {_h} blocks over loop-block to stone or cobblestone or light gray stained glass
+            if loop-number = 4:
+                loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                    set block {_h} blocks over loop-block to gray stained glass
+            add 1 to {_h}
+            play sound "block.piston.extend" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 5 ticks
+        #wylaczenie niewidki
+        loop {_invs::*}:
+            send "%loop-value%" to event-player
+            make loop-value visible
+        wait 3 second
+        #pokazanie wyniku
+        play sound "block.anvil.land" at volume 0.3 for all players in world "{@minigamesworld}"
+        loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
+            if loop-block is not polished basalt or andesite or cobblestone or stone or green terracotta or green concrete or lime terracotta:
+                set loop-block to air
+        wait 2 second
+        #usuwanie sciany
+        play sound "block.piston.contract" at volume 0.5 for all players in world "{@minigamesworld}"
+        set {_h} to 0
+        loop 4 times:
+            loop blocks within {ox::tp::wall1} and {ox::tp::wall2}:
+                set block {_h} blocks over loop-block to air
+            add 1 to {_h}
+        loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
+            set loop-block to block 30 blocks under the loop-block
+        countplayers("ox")
+on walk on black stained glass:
+    #ox - odpadniecie
+    "%region at player%" contains "ox"
+    teleport player to {ox::tp::spec}
+command /oxadmin [<text>]:
+    #ox - komenda admina
+    permission: minigry.admin
+    trigger:
+        if arg-1 is "ox1" or "ox2" or "wall1" or "wall2" or "tpevent" or "spec":
+            set {ox::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+        if arg-1 is "copy":
+            loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
+                set block 30 blocks under loop-block to loop-block
+#funkcje
+function countplayers(gametype: string):
+    set {_c} to 0
+    loop all players:
+        if "%region at loop-player%" contains "%{_gametype}%_gra":
+            add 1 to {_c}
+    if {_c} < 1:
+        send "{@noplayersleft}" to all players in world "{@minigamesworld}"
+    if {_c} = 1:
+        loop all players:
+            if "%region at loop-player%" contains "%{_gametype}%_gra":
+                set {_w} to loop-player
+                exit loop
+        send "{@annoucewinner} &a%{_w}%" to all players
+        play sound "ui.toast.challenge_complete" at volume 0.3 for all players in world "{@minigamesworld}"
+        if {_gametype} = "spleef":
+            #spleef - akcje koncowe
+            delete {spleef::on}
+            clear {_w}'s inventory
+            loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+                set loop-block to block 30 under the loop-block
+    if {_c} > 1:
+        send "{@playersleftmsg} %{_c}%" to all players in world "{@minigamesworld}"
+        if {_gametype} = "spleef":
+            #spleef - akcje koncowe
+            delete {spleef::on}
+            clear {_w}'s inventory
+            loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+                set loop-block to block 30 under the loop-block
+function tpspawn(line: string, s: block, p: player):
+    line 2 of {_s} is {_line}
+    make {_p} execute command "/spawn"
+function tpevent(p: player):
+    if {most::starting} is true:
+        teleport {_p} to {most::tp::tpevent}
+        clear {_p}'s inventory
+        stop
+    if {kolorki::starting} is true:
+        teleport {_p} to {kolorki::tp::tpevent}
+        clear {_p}'s inventory
+        stop
+    if {tntrun::starting} is true:
+        teleport {_p} to {tntrun::tp::tpevent}
+        clear {_p}'s inventory
+        stop
+    if {ox::starting} is true:
+        teleport {_p} to {ox::tp::tpevent}
+        clear {_p}'s inventory
+        stop
+    if {spleef::starting} is true:
+        teleport {_p} to {ox::tp::tpevent}
+        clear {_p}'s inventory
+        stop
+    else:
+        send "{@notstarting}" to {_p}
+
+    
