@@ -22,29 +22,42 @@ options:
     buyslot1: 11
     buyslot10: 13
     buyslot100: 15
-    price1: 50
-    price10: 500
-    price100: 4500
+    price1: 100
+    price10: 900
+    price100: 8000
     notenoughtbalance: Nie masz wystarczających środków!
     newsizemessage: Powiększono border do
+    reset: &cZrestartowano powiększenie
+    worldsizemsg: &7Wielkość świata
+
 on load:
-    delete {border::added}
     if {border::added::world} is not set:
-        set {border::added} to 0
+        set {border::added::world} to 0
     if {border::added::world_nether} is not set:
-        set {border::added} to 0
+        set {border::added::world_nether} to 0
     if {border::added::world_the_end} is not set:
-        set {border::added} to 0
+        set {border::added::world_the_end} to 0
+
+command /powiekszborderreset [<text>]:
+    permission: powiekszborder.reset
+    trigger:
+        delete {border::added::*}
+        send "{@reset}"
+        set border size of "world" to {@basesize}
+        set border size of "world_nether" to {@basesize}
+        set border size of "world_the_end" to {@basesize}
+
 command /powiekszborder [<text>]:
     trigger:
         if player's world is not "world" or "world_nether" or "world_the_end":
             send "{@wrongworld}"
             stop
         set {_menu} to a new chest inventory with 3 row named "{@mainmenuname}"
-        set slot 11 of {_menu} to {@triggeritemworld} named "&f{@triggeritemnameworld}"
-        set slot 13 of {_menu} to {@triggeritemnether} named "&f{@triggeritemnamenether}"
-        set slot 15 of {_menu} to {@triggeritemend} named "&f{@triggeritemnameend}"
+        set slot 11 of {_menu} to {@triggeritemworld} named "&f{@triggeritemnameworld}" with lore "{@worldsizemsg}: %({@basesize} + {border::added::world} * 2) / 2%"
+        set slot 13 of {_menu} to {@triggeritemnether} named "&f{@triggeritemnamenether}" with lore "{@worldsizemsg}: %({@basesize} + {border::added::world_nether} * 2) / 2%"
+        set slot 15 of {_menu} to {@triggeritemend} named "&f{@triggeritemnameend}" with lore "{@worldsizemsg}: %({@basesize} + {border::added::world_the_end} * 2) / 2%"
         open {_menu} to player
+
 on inventory click:
     name of event-inventory is "{@mainmenuname}" # Make sure it's our menu.
     set {_p} to player
@@ -55,6 +68,7 @@ on inventory click:
         worldmenu("nether", {_p})
     if index of event-slot is 15:
         worldmenu("end", {_p})
+
 on inventory click:
     name of event-inventory is "{@menuworldname} world" or "{@menuworldname} nether" or "{@menuworldname} end" # Make sure it's our menu.
     set {_p} to player
@@ -84,9 +98,11 @@ function buyborder(wworld: string, iindex: integer, pplayer: player):
         close {_pplayer}'s inventory
         stop
     reduce {_pplayer}'s balance by {_n}
+    if {border::added::%{_wworld}%} is not set:
+        set {border::added::%{_wworld}%} to 0
     add {_multiplier} to {border::added::%{_wworld}%}
     set {_newsize} to {@basesize} + {border::added::%{_wworld}%} * 2
-    set border size of {_wworld} to {_newsize} over 10 seconds
+    set border size of {_wworld} to {_newsize}
     send "{@newsizemessage} +/- %{_newsize} / 2%" to {_pplayer}
     close {_pplayer}'s inventory
 
