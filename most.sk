@@ -26,9 +26,15 @@ options:
     falseline: falsz
     trueline: prawda
     annoucewinner: &fEvent %{_gametype}% wygrał
-    playersleftmsg: &fLiczba graczy
+    playersleftmsg0: &cOdpadł
+    playersleftmsg1: &cPozostało
+    playersleftmsg2: graczy...
     firstlinespleef: [spleef]
     spleefstartingmsg: spleef startuje za 5 sekund
+    resetmapsign: reset
+    armageddonmsg: &cNISZCZENIE BLOCKÓW!
+    armageddonsign: armageddon
+    joinmsg: &adołączył na /event!
 ##===================================ogolne===================================
 command /event:
     trigger:
@@ -350,12 +356,26 @@ on projectile hit:
     event-world is "{@minigamesworld}"
     event-projectile is snowball
     event-block is snow block
+    block under event-block is bedrock
+    {spleef::on} is true
     set event-block to air
+on break of snow block:
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    {spleef::on} is not set
+    cancel event
+on break:
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    cancel event
+    event-block is not snow:
+        cancel event
 on break of snow block:
     #spleef - rozkopywanie
     "%region at event-block%" contains "spleef_gra"
     event-world is "{@minigamesworld}"
     {spleef::on} is true
+    block under event-block is bedrock
     add 1 snowball to player's inventory 
     cancel event
     set event-block to air
@@ -375,28 +395,54 @@ on rightclick on sign:
         send "{@eventmessage}" to all players
         set {spleef::starting} to true
         delete {spleef::on}
+    #armageddon
+    if line 2 of clicked block is "{@armageddonsign}":
+        play sound "entity.zombie.attack_wooden_door" at volume 0.6 for all players in world "{@minigamesworld}"
+        wait 1 second
+        send "{@armageddonmsg}" to all players in world "{@minigamesworld}"
+        loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+            loop-block is snow block:
+                chance of 5%:
+                    set loop-block to air
+    #reset mapy
+    if line 2 of clicked block is "{@resetmapsign}":
+        loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
+            set loop-block to block 30 under the loop-block
     if line 2 of clicked block is "{@startsign}":
         loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
             set loop-block to block 30 under the loop-block
         send "{@spleefstartingmsg}" to all players
-        wait 5 seconds
+        loop 5 times:
+            send "&c%5 - loop-number + 1%..."  to players in world "{@minigamesworld}"
+            play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 1 second
         delete {spleef::starting}
+        loop all players:
+            if "%region at loop-player%" contains "spleef_gra":
+                clear player's inventory
         set {spleef::on} to true
         loop all players:
             if "%region at loop-player%" contains "spleef_gra":
                 give loop-player 1 iron shovel
+                set loop-player's selected hotbar slot to slot 0 of loop-player
+on place of snow block:
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    {spleef::on} is true
+    block under event-block is not bedrock
+    cancel event
 on quit:
     #spleef - wyjscie
     event-world is "{@minigamesworld}"
     if "%region at player%" contains "spleef_gra":
         teleport event-player to {spleef::tp::spec}
-        countplayers("spleef")
+        countplayers("spleef", event-player)
 on walk on bedrock:
     #spleef - odpadniecie
     "%region at player%" contains "spleef_gra"
-    teleport player to {spleef::tp::spec}
     clear player's inventory
-    countplayers("spleef")
+    teleport player to {spleef::tp::spec}
+    countplayers("spleef", event-player)
 command /spleefadmin [<text>]:
     #spleef - komenda admina
     permission: minigry.admin
@@ -471,7 +517,6 @@ on rightclick on sign:
             add 1 to {_h}
         loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
             set loop-block to block 30 blocks under the loop-block
-        countplayers("ox")
     if line 2 of clicked block is "{@trueline}":
         delete {ox::starting}
         #znikanie graczy
@@ -521,7 +566,6 @@ on rightclick on sign:
             add 1 to {_h}
         loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
             set loop-block to block 30 blocks under the loop-block
-        countplayers("ox")
 on walk on black stained glass:
     #ox - odpadniecie
     "%region at player%" contains "ox"
@@ -538,8 +582,9 @@ command /oxadmin [<text>]:
             loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
                 set block 30 blocks under loop-block to loop-block
 #funkcje
-function countplayers(gametype: string):
+function countplayers(gametype: string, pl: player):
     set {_c} to 0
+    wait 1 tick
     loop all players:
         if "%region at loop-player%" contains "%{_gametype}%_gra":
             add 1 to {_c}
@@ -550,7 +595,7 @@ function countplayers(gametype: string):
             if "%region at loop-player%" contains "%{_gametype}%_gra":
                 set {_w} to loop-player
                 exit loop
-        send "{@annoucewinner} &a%{_w}%" to all players
+        send title "{@annoucewinner} &a%{_w}%" to all players
         play sound "ui.toast.challenge_complete" at volume 0.3 for all players in world "{@minigamesworld}"
         if {_gametype} = "spleef":
             #spleef - akcje koncowe
@@ -559,13 +604,10 @@ function countplayers(gametype: string):
             loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
                 set loop-block to block 30 under the loop-block
     if {_c} > 1:
-        send "{@playersleftmsg} %{_c}%" to all players in world "{@minigamesworld}"
+        send "{@playersleftmsg0} &f%prefix of {_pl}%%{_pl}%&c. {@playersleftmsg1} %{_c}% {@playersleftmsg2}" to all players in world "{@minigamesworld}"
         if {_gametype} = "spleef":
             #spleef - akcje koncowe
-            delete {spleef::on}
             clear {_w}'s inventory
-            loop blocks within {spleef::tp::spleef1} and {spleef::tp::spleef2}:
-                set loop-block to block 30 under the loop-block
 function tpspawn(line: string, s: block, p: player):
     line 2 of {_s} is {_line}
     make {_p} execute command "/spawn"
@@ -573,22 +615,27 @@ function tpevent(p: player):
     if {most::starting} is true:
         teleport {_p} to {most::tp::tpevent}
         clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop
     if {kolorki::starting} is true:
         teleport {_p} to {kolorki::tp::tpevent}
         clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop
     if {tntrun::starting} is true:
         teleport {_p} to {tntrun::tp::tpevent}
         clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop
     if {ox::starting} is true:
         teleport {_p} to {ox::tp::tpevent}
         clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop
     if {spleef::starting} is true:
-        teleport {_p} to {ox::tp::tpevent}
+        teleport {_p} to {spleef::tp::tpevent}
         clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop
     else:
         send "{@notstarting}" to {_p}
