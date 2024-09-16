@@ -1,0 +1,47 @@
+#skript na kod na czacie
+options:
+    prefix: &6KOD
+    kodmessage: &fPrzepisz kod /kod
+    notstarted: &cNie ma aktualnie kodu
+    winner: &fWygral gracz
+    badcode: &cZly kod
+    prize: 25
+    addedprize: &aWygrales, dodano następującą kwote do twojego konta
+
+command /kodadmin [<text>]:
+    permission: kod.admin
+    trigger:
+        delete {kod::znaki::*}
+        if {kod::number} is not set:
+            set {kod::number} to join (7 random alphanumeric characters between "0" and "z") with ""
+        send "{@prefix} {@kodmessage} %{kod::number}%" to all players
+
+command /kod [<text>]:
+    trigger:
+        if {kod::number} isn't set:
+            send "{@prefix} {@notstarted}"
+            stop
+        if arg-1 is "%{kod::number}%":
+            delete {kod::number}
+            send "{@prefix} {@winner} &f%prefix of player%%player%" to all players
+            set {_c} to 0
+            loop all players:
+                add 1 to {_c}
+            set {_prize} to {@prize}*{_c}
+            add {_prize} to player's balance
+            send "{@prefix} {@addedprize} %{_prize}%$"
+            stop
+        else:
+            send "{@prefix} {@badcode}"
+            stop
+
+on load:
+    wait 5 minutes
+    while true is true:
+        if {kod::number} is set:
+            delete {kod::number}
+        if number of online players > 1:
+            set {kod::number} to join (7 random alphanumeric characters between "0" and "z") with ""
+            send "{@prefix} {@kodmessage} %{kod::number}%" to all players
+        wait 15 minutes
+        
