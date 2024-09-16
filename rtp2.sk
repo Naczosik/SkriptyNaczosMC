@@ -3,24 +3,41 @@ options:
     tpradius: 2000 #promień w którym teleportuje gracza
     tpworld: "world"
     tpradiustoborder: true #czy ma tepać do wielkości świata?
-    buttontype: birch button
-on rightclick on birch button:
+    buttontype: bamboo button
+    grouprtpblock: amethyst block
+on rightclick on bamboo button:
     block behind is bedrock
     if {@tpradiustoborder} is true:
         set {_radius} to border size of {@tpworld} / 2
+        reduce {_radius} by 50
     else:
         set {_radius} to {@tpradius}
-    set {_x} to random integer between {_radius} and -{_radius}
-    set {_y} to 320
-    set {_z} to random integer between {_radius} and -{_radius}
-    set {_xyz} to location at {_x}, {_y}, {_z} in {@tpworld}
+    if block under the event-player is {@grouprtpblock}:
+        loop players within 5 meters of the player:
+            if block under loop-player is {@grouprtpblock}:
+                add loop-player to {_l::*}
+        loop {_l::*}:
+            send loop-value to event-player
+        set {_grouprtp} to true
+    set {_r} to true
+    while {_r} is true:
+        set {_x} to random integer between {_radius} and -{_radius}
+        set {_y} to 320
+        set {_z} to random integer between {_radius} and -{_radius}
+        set {_xyz} to location at {_x}, {_y}, {_z} in {@tpworld}
+        loop 320 times:
+            if block under {_xyz} is air:
+                set {_xyz} to block under {_xyz}
+            else:
+                if block under {_xyz} is water or kelp:
+                    stop loop
+                set {_r} to false
+                stop loop
     teleport player to {_xyz}
-    loop 320 times:
-        if block under player is air:
-            teleport player under player
-        else:
-            stop loop
+    if {_grouprtp} is true:
+        loop {_l::*}:
+            teleport loop-value to {_xyz}
     #if block under player is not water:
     #    stop loop
-    send "&ePrzeteleportowano w losowe kordynaty &f( %player's location% )"
+    send "&6RTP &fPrzeteleportowano w losowe miejsce" to event-player
     stop
