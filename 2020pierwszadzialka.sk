@@ -1,0 +1,31 @@
+#kod umożliwiający danie pierwszej działki dla każdego gracza, stworzony w wyniku braku możliwości obdarowywania graczy działką przez komende /kit z pluginu Essentialsx
+options:
+    pierwszadzialkasuccesful: "&dNaczos&f&lMC &aOtrzymałeś pierwszą darmową działkę, kolejne scraftuj według wzoru, który możesz znaleźć na spawnie"
+    pierwszadzialkatoofast: "Pierwszą działkę możesz odebrać po 30 minutach od wejścia na serwer"
+    pierwszadzialkawrongworld: "Działke możesz odebrać tylko jak jesteś w świecie survival na powierzchni"
+on first join:
+    set {pierwszadzialka::join::%player%} to now
+command /pierwszadzialka:
+    trigger:
+        if {pierwszadzialka::%player%} is not set:
+            if player's world is not "world":
+                send {@pierwszadzialkawrongworld}
+                stop
+            if difference between {pierwszadzialka::join::%player%} and now is less than 30 minutes:
+                send {@pierwszadzialkatoofast}
+                stop
+            make console execute command "/ps give zwykla %player%"
+            send {@pierwszadzialkasuccesful}
+            set {pierwszadzialka::%player%} to now
+        else:
+            send "Już otrzymałeś/aś pierwszą działkę %{pierwszadzialka::%player%}%. Kolejne tworzy się w crafting. Wiecej informacji &a/pomoc"
+        stop
+command /pierwszadzialkaadmin [<player>]:
+    permission: pierwszadzialka.admin
+    trigger:
+        if arg 1 is set:
+            delete {pierwszadzialka::%arg 1%}
+            send "Usunięto pierwsza działke %arg 1% z bazy danych"
+            stop
+        delete {pierwszadzialka::*}
+        send "Usunięto pierwsze działki z bazy danych"

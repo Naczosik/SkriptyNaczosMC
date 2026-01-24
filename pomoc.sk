@@ -1,0 +1,208 @@
+options:
+    mainmenuname: &8Pomoc
+
+on load:
+    delete {pomoc::*}
+    # działki
+    add "<#79ceff>/dzialka <white>- menu działek" to {pomoc::*}
+    add "<#79ceff>/dzialka help <white>- komendy działek" to {pomoc::*}
+    add "<#79ceff>/pierwszadzialka <white> - odbierz pierwszą działke" to {pomoc::*}
+    add "<#79ceff>/dzialka sethome <white>od rangi <#FCC729>VIP" to {pomoc::*}
+
+    # add "<#79ceff>/dz get zwykla <white>kup kolejną działkę za <#FCC729>5000$" to {pomoc::*}
+    add "<white>Zdobądź działkę craftując ją według crafting na spawnie!" to {pomoc::*}
+    add "<white>Nie ma limitu działek!" to {pomoc::*}
+
+    add "<#79ceff>/rynek <white>- rynek wymiany z graczami" to {pomoc::*}
+    # add "<#79ceff>/sklep <white>- sprzedawaj i kupuj przedmioty" to {pomoc::*}
+    # add "<#79ceff>/sprzedajgui <white>- sprzedawaj itemy masowo" to {pomoc::*}
+
+    add "<#79ceff>/baltop <white>- sprawdź top pieniędzy" to {pomoc::*}
+    # add "<#79ceff>/money <white>- sprawdz swoje saldo" to {pomoc::*}
+    # add "<#79ceff>/daily <white>- odbierz codzienne nagrody" to {pomoc::*}
+    # add "<#79ceff>/rzutmoneta <white>- obstaw rzut monetą i podwój to co obstawiłeś" to {pomoc::*}
+    add "<#79ceff>/changepass <white>- zmień hasło" to {pomoc::*}
+    add "<#79ceff>/premium <white>- przełącz na logowanie bez hasła (dla graczy z premium minecraft)" to {pomoc::*}
+    add "<#79ceff>/msg <white>- napisz prywatnie do innego gracza" to {pomoc::*}
+    add "<#79ceff>/r <white>- odpisz ostatniej prywatnej wiadomości" to {pomoc::*}
+    add "<#79ceff>/ignore <white>- wyłącz prywatne wiadomości od gracza" to {pomoc::*}
+    add "<#79ceff>/msgtoggle <white> - wyłącz prywatne wiadomości od wszystkich graczy" to {pomoc::*}
+    add "<#79ceff>/home <white>- teleportuj się do domu" to {pomoc::*}
+    add "<#79ceff>/sethome <white>- ustaw dom" to {pomoc::*}
+    add "<#79ceff>/delhome <white>- usuń dom" to {pomoc::*}
+    add "<#79ceff>/tpa <white>- wyślij zapytanie o teleportacje" to {pomoc::*}
+    add "<#79ceff>/tptoggle <white>- anuluj odbieranie zaproszeń do tpa" to {pomoc::*}
+    # add "<#79ceff>/parkour <white>- poskacz sobie" to {pomoc::*}
+    add "<#79ceff>/sit <white>- usiądź" to {pomoc::*}
+    add "<#79ceff>/lay <white>- połóż się" to {pomoc::*}
+    add "<#79ceff>/wymiana <white>- wymieniaj przedmioty z innymi" to {pomoc::*}
+    add "<#79ceff>/discord <white>- otrzymaj zaproszenie na serwer discord!" to {pomoc::*}
+    # add "<#79ceff>/glosowaniedeszcz <white>- włącz głosowanie na wyłączenie deszczu" to {pomoc::*}
+    # add "<#79ceff>/co i <white>- włącz sprawdzanie kto postawił/zniszczył dany blok" to {pomoc::*}
+    # add "<#79ceff>Zabicie smoka <white>- 25%% szans na elytre / 0,2%% na jajo smoka!" to {pomoc::*}
+    # add "<#79ceff>/polecenie <white>- odbierz nagrode oraz wynagródź osobę która zaprosiła ciebie na serwer!" to {pomoc::*}
+    # add "<#79ceff>/pwarp <white>- odkrywaj warpy innych graczy!" to {pomoc::*}
+    # add "<#79ceff>/discord link <white>- połącz konto na serwerze z kontem discord!" to {pomoc::*}
+    
+on join:
+    wait 100 seconds
+    while event-player is online:
+        if {pref::helpinfo::%player%} is not set:
+            send ""
+            send "&8&l[<#FCC729><bold>!&8&l] <#FCC729><bold>INFO &8→ <white>%random element of {pomoc::*}%" to event-player
+            send ""
+        wait 300 seconds
+
+# command /kupilrange [<text>] [<text>]:
+#     trigger:
+#         wait 2 ticks
+#         play sound "entity.experience_orb.pickup" at volume 0.3 for all players
+#         send "<white>Gracz <#FCC729>%arg-1% <white>kupił range <#FCC729>%arg-2%" to all players
+#         send "<white>Kup range na: <#79ceff>https://naczosmc.pl/" to all players
+
+command /rangi [<text>]:
+    trigger:
+        wait 2 ticks
+        play sound "entity.experience_orb.pickup" at volume 0.3 for event-player
+        send "<#FCC729>Sklep z rangami: <#79ceff>https://naczosmc.pl/"
+        send "<#FCC729>Info o rangach:"
+        send "<#79ceff>/vip"
+        send "<#79ceff>/vip+"
+        send "<#79ceff>/media"
+
+# command /media:
+#     trigger:
+#         send "        <white>&lranga MEDIA:"
+#         wait 2 ticks
+#         play sound "entity.experience_orb.pickup" at volume 0.3 for event-player
+#         send "<#FCC729>1. Wrzuć film na youtube/tik tok o NaczosMC.pl"
+#         send "<#FCC729>2. Zdobądź 500 wyświetleń"
+#         send "<#FCC729>3. Zgłoś się w tickecie na discordzie po rangę!"
+#         send "<#FCC729>otrzymasz:"
+#         send "<#FCC729>wyróżniająca ranga na serwerze"
+#         send "<#FCC729>wszystkie dogodności rangi VIP (/vip)"
+
+command /vip [<text>]:
+    trigger:
+        send "        <white>&lranga VIP:"
+        wait 2 ticks
+        play sound "entity.experience_orb.pickup" at volume 0.3 for event-player
+        send "<#FCC729>wyróżniająca ranga na serwerze"
+        send "<#FCC729>możliwość ustawienia 3 /sethome"
+        send "<#FCC729>możliwość wystawienia 5 przedmiotów na /ah"
+        send "<#FCC729>50%% więcej waluty za czas gry względem gracza"
+        send "<#FCC729>możliwość pisania co 4 sekundy"
+        send "<#FCC729>ubieranie przedmiotów na głowe /hat"
+        send "<#FCC729>zmiana lokalizacji home działki za pomocą /dzialka sethome"
+        send "<#FCC729>możliwość ustawienia 2 /pwarp"
+        send "<#FCC729>Kup range na: <#79ceff><link:https://naczosmc.pl>https://naczosmc.pl/"
+
+#         send "<#FCC729>wejście na pełen serwer"
+#         send "<#FCC729>kolorowe pisanie na czacie (a-f 0-9)"
+#         send "<#FCC729>dostęp do zmiany skina /skin"
+#         send "<#FCC729>włączanie głosowania na wyłączenie deszczu /glosowaniedeszcz"
+#         send "<#FCC729>możliwość ustawienia 2 prac w tym samym momencie /jobs"
+
+command /vip+ [<text>]:
+    trigger:
+        send "        <white>&lranga VIP+:"
+        wait 2 ticks
+        play sound "entity.experience_orb.pickup" at volume 0.3 for event-player
+        send "<#FCC729>wyróżniająca ranga na serwerze"
+        send "<#FCC729>możliwość ustawienia 4 /sethome"
+        send "<#FCC729>możliwość wystawienia 7 przedmiotów na /ah"
+        send "<#FCC729>100%% więcej waluty za czas gry względem gracza"
+        send "<#FCC729>możliwość pisania co 3 sekundy"
+        send "<#FCC729>ubieranie przedmiotów na głowe /hat"
+        send "<#FCC729>zmiana lokalizacji home działki za pomocą /dzialka sethome"
+        send "<#FCC729>możliwość ustawienia 3 /pwarp"
+        send "<#FCC729>Kup range na: <#79ceff>https://naczosmc.pl/"
+
+
+#         send "<#FCC729>wejście na pełen serwer"
+#         send "<#FCC729>kolorowe pisanie na czacie (a-f 0-9) oraz rgb"
+#         send "<#FCC729>dostęp do zmiany skina /skin"
+#         send "<#FCC729>włączanie głosowania na wyłączenie deszczu /glosowaniedeszcz"
+#         send "<#FCC729>możliwość ustawienia 3 prac w tym samym momencie /jobs"
+#         send "<#FCC729>dostęp do zmiany kolorów rangi przez komende /kv+"
+
+command /regulamin:
+    trigger:
+        send "        <white>&lREGULAMIN:"
+        wait 2 ticks
+        play sound "entity.experience_orb.pickup" at volume 0.3 for event-player
+        send "   <white>1. &cWszystkie działania na szkodę serwera mogą skutkować 14 dniowym banem."
+        send "   <white>2. &cPróba oszustwa administracji podlega natychmiastowej karze oraz skutkuje banem do 14 dni."
+        send "   <white>3. &cWykorzystywanie błędów jest karane. Każdy błąd należy niezwłocznie zgłosić administracji i zaprzestać z jej korzystania. Wykorzystywanie błędów skutkuje banem do 14 dni."
+        send "   <white>4. &cReklamowanie się jest dozwolone jedynie za zgodą Admina lub @naczosiko, w innym przypadku skutkuje banem do 14 dni."
+        send "   <white>5. &cBudowanie uporczywych mechanizmów skutkuje banem do 14 dni."
+        send "   <white>6. &cBudowanie lavacastów wokół działek innych lub w okolicach spawna skutkuje banem do 14 dni."
+        send "   <white>7. &cWyzywanie, obrażanie i inna agresja słowna skutkuje mutem lub banem do 7 dni."
+        send "   <white>8. &cTworzenie multikont w celu uchylania się od bana skutkuje permamentym zbanowaniem mulciaka."
+        send "   <white>9. &cUporczywe utrudnianie gry innym skutkuje banem do 14 dni."
+        send "   <white>10. &cKolejne przewiniania w tej samej kategorii mogą być banowane na dłuższy okres niż podano wyżej."
+        send "<white>Ostatnia edycja: 13.10.2024"
+
+command /pomoc [<text>]:
+    trigger:
+        set {_menu} to a new chest inventory with 4 row named "{@mainmenuname}"
+        # set slots 0 and 1 and 2 and 3 and 4 and 5 and 6 and 7 and 8 and 36 and 37 and 38 and 39 and 40 and 41 and 42 and 43 and 44 of {_menu} to black stained glass pane named " "
+        # set slots 27 and 28 and 29 and 30 and 31 and 32 and 33 and 34 and 35 of {_menu} to black stained glass pane named ""
+
+        #dzialki
+        set slot 10 of {_menu} to emerald block named "<#FCC729>Działki" with lore "<#79ceff>/dzialka <white>- menu działki" and "<#79ceff>/dzialka help <white>- komendy działek" and "<#79ceff>/pierwszadzialka <white> - odbierz pierwszą działke" and "<#79ceff>/dzialka sethome <white>od rangi <#FCC729>VIP"
+        set slot 19 of {_menu} to emerald ore named "<#FCC729>Kolejne działki" with lore "<white>Zdobądź działkę craftując ją według crafting na spawnie" and "<white>Nie ma limitu działek!"
+
+        #ekonomia
+        set slot 12 of {_menu} to gold ingot named "<#FCC729>Ekonomia" with lore "<white>Zarabiasz za czas gry" and "  <white>lub wymiane z graczami przez <#79ceff>/rynek <white>lub <#79ceff>/chestshop"# and "<#79ceff>/sklep <white>- sprzedawaj i kupuj przedmioty" and "<#79ceff>/sprzedajgui <white>- sprzedawaj itemy masowo"
+        set slot 21 of {_menu} to raw gold named "<#FCC729>Przydatne komendy" with lore "<#79ceff>/baltop <white>- sprawdź top pieniędzy" and "<#79ceff>/pay <white>- zapłać innemu graczowi"  and "<#79ceff>/glosuj <white>- zdobądź klucz do nagród za głosowanie na serwer"
+        # set slot 30 of {_menu} to gold nugget named "<#FCC729>Inne" with lore "<#79ceff>/daily <white>- odbierz codzienne nagrody" and "<#79ceff>/rzutmoneta <white>- obstaw rzut monetą"
+
+        #inne
+        set slot 14 of {_menu} to shield named "<#FCC729>Logowanie" with lore "<#79ceff>/changepass <white>- zmień hasło" and "<#79ceff>/premium <white>- przełącz na logowanie bez hasła (dla graczy z premium minecraft)"
+        set slot 15 of {_menu} to feather named "<#FCC729>Prywatne pisanie" with lore "<#79ceff>/msg <white>- napisz prywatnie do innego gracza" and "<#79ceff>/r <white>- odpisz ostatniej prywatnej wiadomości" and "<#79ceff>/ignore <white>- wyłącz prywatne wiadomości od gracza" and "<#79ceff>/msgtoggle <white> - wyłącz prywatne wiadomości od wszystkich graczy"
+        set slot 16 of {_menu} to red bed named "<#FCC729>Ustaw dom" with lore "<#79ceff>/home <white>- teleportuj się do domu" and "<#79ceff>/sethome <white>- ustaw dom" and "<#79ceff>/delhome <white>- usuń dom"
+        set slot 23 of {_menu} to chorus flower named "<#FCC729>Teleportuj się do innych" with lore "<#79ceff>/tpa <white>- wyślij zapytanie o teleportacje" and "<#79ceff>/tpaccept <white>- zaakceptuj teleportacje" and "<#79ceff>/tpadeny <white>- anuluj teleportacje" and "<#79ceff>/tptoggle <white>- anuluj odbieranie zaproszeń do tpa"
+        #set slot 24 of {_menu} to iron sword named "<#FCC729>Warp 1v1" with lore "<#79ceff>/warp 1v1 <white>-walcz z innymi graczami" and "<#79ceff>/1v1 <white>- dołącz na arene" and "<#79ceff>/1v1top <white>- sprawdz topke warpu"
+        #set slot 25 of {_menu} to arrow named "<#FCC729>Inne" with lore "<#79ceff>/parkour <white>- otwórz menu dotyczące map parkour" and "<#79ceff>/sit <white>-usiądź" and "<#79ceff>/lay <white>-połóż się" and "<#79ceff>/wymiana <white>- wymieniaj przedmioty z innymi" and "<#79ceff>/dc <white>- otrzymaj zaporoszenie na serwer discord!" and "<#79ceff>/glosowaniedeszcz <white>- włącz głosowanie na wyłączenie deszczu" and "<#79ceff>/event <white>- teleportuj się na event gdy jest organizowany" and "<#79ceff>/co i <white>- włacz sprawdzanie kto postawił/zniszczył dany blok" and "<#79ceff>Zabicie smoka <white>- 25%% szans na elytre / 0,2%% na jajo smoka!"
+        open {_menu} to player
+
+on inventory click:
+    name of event-inventory is "{@mainmenuname}" # Make sure it's our menu.
+    #dzialki
+    if index of event-slot = 10:
+        send "<#79ceff>/dzialka <white>- menu działki" and "<#79ceff>/dzialka help <white>- komendy działek" and "<#79ceff>/pierwszadzialka <white> - odbierz pierwszą działke" and "<#79ceff>/dzialka sethome <white>od rangi <#FCC729>VIP"
+        close player's inventory
+    if index of event-slot = 19:
+        send "<white>Zdobądź działkę craftując ją według crafting na spawnie" and "<white>Nie ma limitu działek!"
+        close player's inventory
+    #ekonomia
+    if index of event-slot = 12:
+        send "<white>Zarabiasz za czas gry" and "  <white>lub wymiane z graczami przez <#79ceff>/rynek <white>lub <#79ceff>/chestshop"# and "<#79ceff>/sklep <white>- sprzedawaj i kupuj przedmioty" and "<#79ceff>/sprzedajgui <white>- sprzedawaj itemy masowo"
+        close player's inventory
+    if index of event-slot = 21:
+        send "<#79ceff>/baltop <white>- sprawdź top pieniędzy" and "<#79ceff>/pay <white>- zapłać innemu graczowi"  and "<#79ceff>/glosuj <white>- zdobądź klucz do nagród za głosowanie na serwer"
+        close player's inventory
+    if index of event-slot = 30:
+        send "<#79ceff>/daily <white>- odbierz codzienne nagrody" and "<#79ceff>/powiekszborder <white>- otwórz menu dotyczące powiększania mapy" and "<#79ceff>/rzutmoneta <white>- obstaw rzut monetą"
+        close player's inventory
+    #inne
+    if index of event-slot = 14:
+        send "<#79ceff>/changepass <white>- zmień hasło" and "<#79ceff>/premium <white>- przełącz na logowanie bez hasła (dla graczy z premium minecraft)"
+        close player's inventory
+    if index of event-slot = 15:
+        send "<#79ceff>/msg <white>- napisz prywatnie do innego gracza" and "<#79ceff>/r <white>- odpisz ostatniej prywatnej wiadomości" and "<#79ceff>/ignore <white>- wyłącz prywatne wiadomości od gracza" and "<#79ceff>/msgtoggle <white> - wyłącz prywatne wiadomości od wszystkich graczy"
+        close player's inventory
+    if index of event-slot = 16:
+        send "<#79ceff>/home <white>- teleportuj się do domu" and "<#79ceff>/sethome <white>- ustaw dom" and "<#79ceff>/delhome <white>- usuń dom"
+        close player's inventory
+    if index of event-slot = 23:
+        send "<#79ceff>/tpa <white>- wyślij zapytanie o teleportacje" and "<#79ceff>/tpaccept <white>- zaakceptuj teleportacje" and "<#79ceff>/tpadeny <white>- anuluj teleportacje" and "<#79ceff>/tptoggle <white>- anuluj odbieranie zaproszeń do tpa"
+        close player's inventory
+    #if index of event-slot = 24:
+    #    send "<#79ceff>/warp 1v1 <white>-walcz z innymi graczami" and "<#79ceff>/1v1 <white>- dołącz na arene" and "<#79ceff>/1v1top <white>- sprawdz topke warpu"
+    #    close player's inventory
+    #if index of event-slot = 25:
+    #    send "<#79ceff>/parkour <white>- otwórz menu dotyczące map parkour" and "<#79ceff>/sit <white>-usiądź" and "<#79ceff>/lay <white>-połóż się" and "<#79ceff>/wymiana <white>- wymieniaj przedmioty z innymi" and "<#79ceff>/dc <white>- otrzymaj zaporoszenie na serwer discord!" and "<#79ceff>/glosowaniedeszcz <white>- włącz głosowanie na wyłączenie deszczu" and "<#79ceff>/event <white>- teleportuj się na event gdy jest organizowany" and "<#79ceff>/co i <white>- włacz sprawdzanie kto postawił/zniszczył dany blok" and "<#79ceff>Zabicie smoka <white>- 25%% szans na elytre / 0,2%% na jajo smoka!"
+    #    close player's inventory
+    cancel event

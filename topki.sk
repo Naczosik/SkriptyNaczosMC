@@ -1,0 +1,23 @@
+command /topki [<text>]:
+    trigger:
+        if arg 1 is "test":
+            send placeholder "ajlb_position_quests_completed_alltime" from player parsed as number
+            send topkipoints("ajlb_position_quests_completed_alltime", player)
+            stop
+        make player execute command "/dm open leaderboards_menu"
+placeholderapi placeholder with the prefix "sktopki":
+    if the identifier is "total":
+        set {_p} to player
+        # set {_n} to topkipoints("ajlb_position_vault_eco_balance_alltime", {_p}) + topkipoints("ajlb_position_statistic_time_played_alltime", {_p}) + topkipoints("ajlb_position_statistic_sleep_in_bed_alltime", {_p}) + topkipoints("ajlb_position_statistic_mob_kills_alltime", {_p}) + topkipoints("ajlb_position_statistic_player_kills_alltime", {_p}) + topkipoints("ajlb_position_statistic_deaths_alltime", {_p}) + topkipoints("ajlb_position_statistic_time_played_alltime", {_p}) + topkipoints("ajlb_position_statistic_mine_block_alltime", {_p}) + topkipoints("ajlb_position_statistic_time_since_death_alltime", {_p}) + topkipoints("ajlb_position_statistic_fall_one_cm_alltime", {_p}) + topkipoints("ajlb_position_statistic_chest_opened_alltime", {_p}) + topkipoints("ajlb_position_statistic_jump_alltime", {_p}) + topkipoints("ajlb_position_statistic_craft_item_alltime", {_p}) + topkipoints("ajlb_position_statistic_animals_bred_alltime", {_p})
+        set {_n} to topkipoints("ajlb_position_vault_eco_balance_alltime", {_p}) + topkipoints("ajlb_position_statistic_sleep_in_bed_alltime", {_p}) + topkipoints("ajlb_position_statistic_mob_kills_alltime", {_p}) + topkipoints("ajlb_position_statistic_time_played_alltime", {_p}) + topkipoints("ajlb_position_statistic_mine_block_alltime", {_p}) + topkipoints("ajlb_position_statistic_time_since_death_alltime", {_p}) + topkipoints("ajlb_position_statistic_fall_one_cm_alltime", {_p}) + topkipoints("ajlb_position_statistic_chest_opened_alltime", {_p}) + topkipoints("ajlb_position_statistic_jump_alltime", {_p}) + topkipoints("ajlb_position_statistic_craft_item_alltime", {_p}) + topkipoints("ajlb_position_statistic_animals_bred_alltime", {_p}) + topkipoints("ajlb_position_quests_completed_alltime", {_p})
+        if {_n} > 150:
+            set {_n} to 0
+        set the result to {_n}
+function topkipoints(i: text, p: player) :: number:
+    if (placeholder {_i} from {_p} parsed as number) < 1:
+        set {_n} to 0
+    else:
+        set {_n} to 11 - (placeholder {_i} from {_p} parsed as number)
+    if {_n} < 0:
+        set {_n} to 0
+    return {_n}

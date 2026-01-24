@@ -1,24 +1,45 @@
 #kod umożliwiający danie pierwszej działki dla każdego gracza, stworzony w wyniku braku możliwości obdarowywania graczy działką przez komende /kit z pluginu Essentialsx
 options:
-    pierwszadzialkasuccesful: "&dNaczos&f&lMC &aOtrzymałeś pierwszą darmową działkę, kolejne scraftuj według wzoru, który możesz znaleźć na spawnie"
-    pierwszadzialkatoofast: "Pierwszą działkę możesz odebrać po 30 minutach od wejścia na serwer"
-    pierwszadzialkawrongworld: "Działke możesz odebrać tylko jak jesteś w świecie survival na powierzchni"
-on first join:
-    set {pierwszadzialka::join::%player%} to now
-command /pierwszadzialka:
+    pierwszadzialkasuccesful: "&dNaczos&f&lMC &aOtrzymałeś pierwszą darmową działkę, kolejne możesz kupić przez /dz get zwykla"
+    pierwszadzialkatoofast: "&cPierwszą działkę możesz odebrać po 30 minutach od wejścia na serwer, poczekaj jeszcze"
+    pierwszadzialkawrongworld: "&cDziałke możesz odebrać tylko jak jesteś w zwykłym świecie survival!"
+    pierwszadzialkathreshold: 16
+    pierwszadzialkaoverthreshold: "&aUżyj <#79ceff>/pierwszadzialka&a, aby otrzymac pierwszą działkę!"
+# on first join:
+#     set {pierwszadzialka::join::%player%} to now
+# on break:
+#     add 1 to {pierwszadzialka::break::%player%}
+#     if {pierwszadzialka::break::%player%} >= {@pierwszadzialkathreshold}:
+#         if {pierwszadzialka::%player%} is not set:
+#             if {pierwszadzialka::reminderbreak::%player%} is not set:
+#                 send {@pierwszadzialkaoverthreshold} to event-player
+#                 set {pierwszadzialka::reminderbreak::%player%} to now
+#             else:
+#                 if difference between now and {pierwszadzialka::reminderbreak::%player%} is more than 30 seconds:
+#                     send {@pierwszadzialkaoverthreshold} to event-player
+#                     set {pierwszadzialka::reminderbreak::%player%} to now
+command /pierwszadzialka [<text>]:
     trigger:
         if {pierwszadzialka::%player%} is not set:
             if player's world is not "world":
                 send {@pierwszadzialkawrongworld}
                 stop
-            if difference between {pierwszadzialka::join::%player%} and now is less than 30 minutes:
-                send {@pierwszadzialkatoofast}
-                stop
-            make console execute command "/ps give zwykla %player%"
+            # send {pierwszadzialka::break::%player%}
+            # if {pierwszadzialka::break::%player%} is not set:
+            #     set {pierwszadzialka::break::%player%} to 0
+            # if {pierwszadzialka::break::%player%} < {@pierwszadzialkathreshold}:
+            #     send "&cMusisz jeszcze wykopać %{@pierwszadzialkathreshold} - {pierwszadzialka::break::%player%}% bloków, aby móc odebrać pierwszą działkę!"
+            #     stop
+            # if difference between {pierwszadzialka::join::%player%} and now is less than 30 minutes:
+            #     send "%{@pierwszadzialkatoofast}% %30 minutes - difference between {pierwszadzialka::join::%player%} and now%"
+            #     stop
+            make console execute command "/dzialka give zwykla %player's name%"
             send {@pierwszadzialkasuccesful}
             set {pierwszadzialka::%player%} to now
         else:
-            send "Już otrzymałeś/aś pierwszą działkę %{pierwszadzialka::%player%}%. Kolejne tworzy się w crafting. Wiecej informacji &a/pomoc"
+            play sound "entity.VILLAGER.NO" with volume 0.5 to the player
+            wait 3 ticks
+            send "&cJuż otrzymałeś/aś pierwszą działkę %{pierwszadzialka::%player%}%. Kolejne możesz scraftowac według receptury pod &b/crafting&c Wiecej informacji &b/pomoc"
         stop
 command /pierwszadzialkaadmin [<player>]:
     permission: pierwszadzialka.admin
@@ -28,4 +49,6 @@ command /pierwszadzialkaadmin [<player>]:
             send "Usunięto pierwsza działke %arg 1% z bazy danych"
             stop
         delete {pierwszadzialka::*}
+        delete {pierwszadzialka::break::*}
+        delete {pierwszadzialka::join::*}
         send "Usunięto pierwsze działki z bazy danych"

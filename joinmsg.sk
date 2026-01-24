@@ -1,0 +1,60 @@
+on load:
+    set {joinmsg::list::*} to "Siemka Goaciku", "Łelkom", "Witaj", "Hejka", "Cześć", "Dzień dobry", "Ello", "Siemano", "Witam na serwerze", "Miło Cię widzieć", "Hej, jak leci?", "Fajnie, że dołączyłeś", "Cześć, bądź jak u siebie", "Yo!" and "Wbijaj śmiało"
+    set {leavemsg::list::*} to "Mama zawołała na obiad", "Nara", "Papa", "Miło było", "Do zobaczenia", "Trzymaj się!", "Na razie", "Wylogowano pomyślnie", "Czekamy na Twój powrót", "Opuszcza nas legenda", "Do usłyszenia", "Bywaj", "Pa pa", "Odpocznij sobie", "Jeszcze się spotkamy" and "Do następnego razu"
+on join:
+    wait 1 tick
+    if {joinmsg::player::%player%} is set:
+        send "&a&l+ &7%{joinmsg::player::%player%}% %event-player%" to all players
+    else:
+        send "&a&l+ &7%random element of {joinmsg::list::*}% %event-player%" to all players
+on quit:
+    if {leavemsg::player::%player%} is set:
+        send "&c&l- &7%{leavemsg::player::%player%}% %event-player%" to all players
+    else:
+        send "&c&l- &7%random element of {leavemsg::list::*}% %event-player%" to all players
+    if {totalplayers::%player%} is not set:
+        set {totalplayers::%player%} to true
+        add 1 to {totalplayers}
+
+
+on first join:
+    add 1 to {totalplayers}
+    set {totalplayers::%player%} to true
+    send "&a&l+ Gracz &f%player% &a&ldołaczył po raz pierwszy na &6Naczos&f&lMC&6.PL&a&l! To %{totalplayers}% gracz na serwerze!"
+    set {joinmsg::bonus} to player
+    wait 60 seconds
+    delete {joinmsg::bonus}
+    delete {joinmsg::bonus::*}
+on chat:
+    {joinmsg::bonus::%player%} is not set
+    {joinmsg::bonus} is set
+    message contains "Siemka Goaciku", "Łelkom", "Witaj", "Hejka", "Cześć", "Dzień dobry", "Ello", "Siemano", "Witam na serwerze", "Miło Cię widzieć", "Hej, jak leci?", "Fajnie, że dołączyłeś", "Cześć, bądź jak u siebie", "Yo!" or "Wbijaj śmiało"
+    add 1000 to player's balance
+    set {joinmsg::bonus::%player%} to true
+    send "&a+1000 Dolarków za powitanie"
+# command /setleavemsg [<text>]:
+#     trigger:
+#         if arg-1 is not set:
+#             send "&8&l[&c&l!&8&l] &cNie podano wiadomości" to event-player
+#             stop
+#         if arg-1 is not element of {leavemsg::list::*}:
+#             send "&8&l[&c&l!&8&l] &cNieprawidłowa wiadomość" to event-player
+#             stop
+#         if event-player has permission "joinmsg.set.%arg-1%:
+#             set {leavemsg::player::%player%} to arg-1
+#             send "&8&l[&a&l!&8&l] &aPomyślnie zmieniono wiadomość opuszczania serwera na &6%arg-1%" to all players
+#         else:
+#             send "&8&l[&c&l!&8&l] &cNie masz permisji do zmiany wiadomości opuszczania serwera na &6%arg-1%" to event-player
+# command /setjoinmsg [<text>]:
+#     trigger:
+#         if arg-1 is not set:
+#             send "&8&l[&c&l!&8&l] &cNie podano wiadomości" to event-player
+#             stop
+#         if arg-1 is not element of {joinmsg::list::*}:
+#             send "&8&l[&c&l!&8&l] &cNieprawidłowa wiadomość" to event-player
+#             stop
+#         if event-player has permission "joinmsg.set.%arg-1%:
+#             set {joinmsg::player::%player%} to arg-1
+#             send "&8&l[&a&l!&8&l] &aPomyślnie zmieniono wiadomość dołączania do serwera na &6%arg-1%" to all players
+#         else:
+#             send "&8&l[&c&l!&8&l] &cNie masz permisji do zmiany wiadomości opuszczania serwera na &6%arg-1%" to event-player

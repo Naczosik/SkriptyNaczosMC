@@ -1,0 +1,13 @@
+command /dc [<text>]:
+    trigger:
+        make player execute command "/discord"
+        play sound "entity.experience_orb.pickup" with volume 0.5 to the player
+command /tiktok [<text>]:
+    trigger:
+        send "<link:https://www.tiktok.com/@naczosik>&aWbij na tiktoka :D &bhttps://www.tiktok.com/@naczosik"
+        play sound "entity.experience_orb.pickup" with volume 0.5 to the player
+command /yt [<text>]:
+    aliases: /youtube
+    trigger:
+        send "<link:https://www.youtube.com/@naczosikk>&aWbij na youtube :D &bhttps://www.youtube.com/@naczosikk"
+        play sound "entity.experience_orb.pickup" with volume 0.5 to the player

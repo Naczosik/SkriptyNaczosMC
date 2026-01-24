@@ -39,7 +39,11 @@ command /spleef [<text>]:
             
             # Jeśli upierasz się przy komendach WorldEdit, muszą być poprawne:
             execute player command "//pos1 0,70,0" # To tylko przykład, WE wymaga zaznaczenia
-            
+            set {_count} to 5
+            while {_count} > 0:
+                broadcast "&eSpleef startuje za &6%{_count}% &esekund..."
+                wait 1 second
+                subtract 1 from {_count}
             loop {spleef.spleef1.players::*}:
                 teleport loop-value to {@spawnLoc}
                 clear loop-value's inventory

@@ -1,0 +1,32 @@
+options:
+    glosujmenuname: &8Glosuj
+    #!!!!!!!reward - nieuzywany - zmien tez glosujreward w glosujmsg!!!!!!!
+    # glosujreward: "2500"
+    glosujmsg: <##00FF00>%arg-1% &7zagłosował na serwer i otrzymał <##00FF00>Klucz głosowania&7! Użyj komendy <##79ceff>/glosuj &7żeby zaglosować!
+command /glosuj [<text>]:
+    trigger:
+        set {_menu} to a new chest inventory with 4 row named "{@glosujmenuname}"
+        # set slot 0 and 1 and 2 and 3 and 4 and 5 and 6 and 7 and 8 and 36 and 37 and 38 and 39 and 40 and 41 and 42 and 43 and 44 of {_menu} to gray stained glass pane named " "
+        set slot 11 of {_menu} to compass named "<#FCC729>Zagłosuj!"
+        set slot 15 of {_menu} to green wool named "<#FCC729>Odbierz nagrodę!"
+        set slot 22 of {_menu} to feather named "<#FCC729>Jakie głosowanie?" with lore "<#79ceff>1. &fKliknij na kompas i otwórz link z czatu" and "<#79ceff>2. &fOddaj głos" and "<#79ceff>3. &fKliknij zieloną wełne w tym menu," and "&f   aby otrzymać nagrodę!"
+        open {_menu} to player
+on inventory click:
+    name of event-inventory is "{@glosujmenuname}" # Make sure it's our menu.
+    if event-slot is 11:
+        make player execute command "/sm-glosuj"
+        close player's inventory
+    if event-slot is 15:
+        make player execute command "/sm-nagroda"
+        close player's inventory
+    cancel event
+command /glosujadmin [<player>]:
+    trigger:
+        execute console command "crates key give %arg-1% vote"
+        # add {@glosujreward} parsed as number to arg-1's balance
+        send "{@glosujmsg}" to all players
+        set {glosuj::rewarded::%player%} to true
+command /glosujadminreload [<text>]:
+    executable by: console
+    trigger:
+        delete {glosuj::rewarded::*}

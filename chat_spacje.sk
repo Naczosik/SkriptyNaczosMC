@@ -1,0 +1,12 @@
+placeholderapi placeholder with the prefix "skchat": # The prefix/expansion in PAPI is 'skriptplaceholders'
+    if the identifier is "tag":
+        if placeholder "deluxetags_tag" from player is not set:
+            set the result to ""
+        else:
+            set the result to " "
+    if the identifier is "team":
+        if placeholder "betterteams_tag" from player is not set:
+            set the result to ""
+        else:
+            set the result to " "
+
