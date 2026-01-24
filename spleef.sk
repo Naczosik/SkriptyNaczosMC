@@ -1,0 +1,51 @@
+# Wymagania: Skript, WorldEdit
+
+options:
+  minPlayers: 2
+  arenaWorld: world
+  loseY: 60
+
+command /spleef [<text>]:
+  trigger:
+    if arg-1 is not set:
+      send "&eUżycie: /spleef join | /spleef start"
+      stop
+    if arg-1 is "join":
+      add player to {spleef.spleef1.players::*}
+      send "&aDołączyłeś do Spleef"
+
+    else if arg-1 is "start":
+      if player is not op:
+        send "&cBrak uprawnień"
+        stop
+      if {spleef.spleef1.running} is true:
+        stop
+
+      set {spleef.spleef1.running} to true
+      execute console command "we load spleef1"
+      execute console command "we paste 0 70 0"
+
+      loop {spleef.spleef1.players::*}:
+        set {_p} to loop-value
+        teleport {_p} to location(0, 75, 0, {@arenaWorld})
+        give {_p} diamond shovel named "&bSpleef"
+
+      broadcast "&eSpleef start!"
+
+on break:
+  if {spleef.spleef1.running} is true:
+    if player is in {spleef.spleef1.players::*}:
+      if tool of player is not diamond shovel:
+        cancel event
+
+on player move:
+  if {spleef.spleef1.running} is true:
+    if player is in {spleef.spleef1.players::*}:
+      if y-coordinate of player < {@loseY}:
+        remove player from {spleef.spleef1.players::*}
+        send "&cOdpadłeś"
+        if size of {spleef.spleef1.players::*} = 1:
+          set {_w} to first element of {spleef.spleef1.players::*}
+          broadcast "&6Wygrywa %{_w}%"
+          set {spleef.spleef1.running} to false
+          delete {spleef.spleef1.players::*}
