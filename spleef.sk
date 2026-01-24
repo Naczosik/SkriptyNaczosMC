@@ -1,51 +1,87 @@
-# Wymagania: Skript, WorldEdit
+# Wymagania: Skript
+# Opcjonalnie: WorldEdit (do ręcznego przygotowania areny)
 
 options:
-  minPlayers: 2
-  arenaWorld: world
-  loseY: 60
+    minPlayers: 2
+    arenaWorld: "world"
+    loseY: 60
+    spawnLoc: location(0.5, 75, 0.5, world "world") # Środek areny
 
 command /spleef [<text>]:
-  trigger:
-    if arg-1 is not set:
-      send "&eUżycie: /spleef join | /spleef start"
-      stop
-    if arg-1 is "join":
-      add player to {spleef.spleef1.players::*}
-      send "&aDołączyłeś do Spleef"
+    trigger:
+        if arg-1 is not set:
+            send "&eUżycie: /spleef join | /spleef start | /spleef stop"
+            stop
+            
+        if arg-1 is "join":
+            if {spleef.spleef1.players::*} contains player:
+                send "&cJuż jesteś w kolejce!"
+                stop
+            add player to {spleef.spleef1.players::*}
+            send "&aDołączyłeś do Spleef! Graczy: %size of {spleef.spleef1.players::*}%"
 
-    else if arg-1 is "start":
-      if player is not op:
-        send "&cBrak uprawnień"
-        stop
-      if {spleef.spleef1.running} is true:
-        stop
+        else if arg-1 is "start":
+            if player is not op:
+                send "&cBrak uprawnień"
+                stop
+            if {spleef.spleef1.running} is true:
+                send "&cArena już wystartowała!"
+                stop
+            if size of {spleef.spleef1.players::*} < {@minPlayers}:
+                send "&cZa mało graczy! Wymagane: {@minPlayers}"
+                stop
 
-      set {spleef.spleef1.running} to true
-      execute console command "we load spleef1"
-      execute console command "we paste 0 70 0"
+            set {spleef.spleef1.running} to true
+            
+            # Zamiast WE, możesz użyć wbudowanego wypełniania blokami (przykładowy obszar)
+            # loop all blocks from location(-10, 70, -10, "world") to location(10, 70, 10, "world"):
+            #    set loop-block to snow block
+            
+            # Jeśli upierasz się przy komendach WorldEdit, muszą być poprawne:
+            execute player command "//pos1 0,70,0" # To tylko przykład, WE wymaga zaznaczenia
+            
+            loop {spleef.spleef1.players::*}:
+                teleport loop-value to {@spawnLoc}
+                clear loop-value's inventory
+                set slot 0 of loop-value to diamond shovel of efficiency 5 named "&bSpleefowa Łopata"
+            
+            broadcast "&e&lSpleef wystartował!"
 
-      loop {spleef.spleef1.players::*}:
-        set {_p} to loop-value
-        teleport {_p} to location(0, 75, 0, {@arenaWorld})
-        give {_p} diamond shovel named "&bSpleef"
-
-      broadcast "&eSpleef start!"
+# Poprawka dla komendy STOP
+        else if arg-1 is "stop":
+            if player is not op:
+                stop
+            set {spleef.spleef1.running} to false
+            delete {spleef.spleef1.players::*}
+            send "&cArena została zresetowana."
 
 on break:
-  if {spleef.spleef1.running} is true:
-    if player is in {spleef.spleef1.players::*}:
-      if tool of player is not diamond shovel:
-        cancel event
-
+    if {spleef.spleef1.running} is true:
+        if {spleef.spleef1.players::*} contains player:
+            if event-block is not snow block: # Zmień na blok, z którego masz arenę
+                cancel event
+                stop
+            # Opcjonalne: usuwanie bloku natychmiastowo
+            set event-block to air
+    else:
+        # Jeśli nie chcesz, żeby gracze niszczyli arenę poza grą
+        if player is in world {@arenaWorld}:
+            if player is not op:
+                cancel event
+# Zmiana z 'on any move' na standardowe 'on player move'
 on player move:
-  if {spleef.spleef1.running} is true:
-    if player is in {spleef.spleef1.players::*}:
-      if y-coordinate of player < {@loseY}:
-        remove player from {spleef.spleef1.players::*}
-        send "&cOdpadłeś"
-        if size of {spleef.spleef1.players::*} = 1:
-          set {_w} to first element of {spleef.spleef1.players::*}
-          broadcast "&6Wygrywa %{_w}%"
-          set {spleef.spleef1.running} to false
-          delete {spleef.spleef1.players::*}
+    if {spleef.spleef1.running} is true:
+        if {spleef.spleef1.players::*} contains player:
+            if y-coordinate of player < {@loseY}:
+                remove player from {spleef.spleef1.players::*}
+                send "&cOdpadłeś!" to player
+                clear player's inventory
+                # Upewnij się, że opcja spawnLoc jest poprawnie ustawiona w 'options'
+                teleport player to {@spawnLoc} 
+                
+                if size of {spleef.spleef1.players::*} <= 1:
+                    set {_winner} to {spleef.spleef1.players::1}
+                    broadcast "&6&lGracz %{_winner}% wygrywa Spleefa!"
+                    set {spleef.spleef1.running} to false
+                    clear {_winner}'s inventory
+                    delete {spleef.spleef1.players::*}
