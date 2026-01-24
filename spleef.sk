@@ -21,8 +21,8 @@ command /spleef [<text>]:
             send "&aDołączyłeś do Spleef! Graczy: %size of {spleef.spleef1.players::*}%"
 
         else if arg-1 is "start":
-            if player is not op:
-                send "&cBrak uprawnień"
+            if player doesn't have permission "spleef.admin":
+                send "&cBrak uprawnień! Wymagana permisja: &7spleef.admin"
                 stop
             if {spleef.spleef1.running} is true:
                 send "&cArena już wystartowała!"
@@ -49,7 +49,8 @@ command /spleef [<text>]:
 
 # Poprawka dla komendy STOP
         else if arg-1 is "stop":
-            if player is not op:
+            if player doesn't have permission "spleef.admin":
+                send "&cBrak uprawnień!"
                 stop
             set {spleef.spleef1.running} to false
             delete {spleef.spleef1.players::*}
