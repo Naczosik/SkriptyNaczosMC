@@ -1,7 +1,7 @@
 options:
-    eventMenuNameMain: "&8Eventy"
-    eventMenuNameChoice: "&8Wybierz grę"
-    eventMenuNameStart: "&8Start gry"
+    eventMenuNameMain: &8Eventy
+    eventMenuNameChoice: &8Wybierz grę
+    eventMenuNameStart: &8Start gry
 
     spleefPrice: 30
 command /event [<text>]:
@@ -25,26 +25,26 @@ on inventory click:
     cancel event
 function eventMenuChoice(p: player):
     set {_menu} to a new chest inventory with 4 row named "{@eventMenuNameChoice}"
-    set slot 11 of {_menu} to snowball named "<#55FF55>Spleef!" with lore "%eventEligibleLore(event-player, "spleef")%"
+    set slot 11 of {_menu} to snowball named "<#55FF55>Spleef!" with lore eventEligibleLore({_p}, "spleef")
     open {_menu} to {_p}
 function eventEligibleLore(p: player, game: text) :: text:
-    if game is "spleef":
-        if eventStatus({_p}, "spleef") is "waiting":
+    if {_game} is "spleef":
+        if {events::status::%{_game}%} is "waiting":
             return "<#55FF55>Kliknij, aby dołączyć za {@spleefPrice} monet!"
-        else if eventStatus({_p}, "spleef") is "playing":
+        if {events::status::%{_game}%} is "playing":
             return "<#FF5555>Jesteś już w grze!"
         else:
             return "<#AAAAAA>Nie możesz dołączyć do tej gry."
 function eventChoice(p: player, game: text):
-    if game is "spleef":
-        if eventStatus({_p}, "spleef") is "waiting":
+    if {_game} is "spleef":
+        if {events::status::%{_game}%} is "waiting":
             eventStart({_p}, "spleef")
-        else if eventStatus({_p}, "spleef") is "playing":
+        if {events::status::%{_game}%} is "playing":
             send "&cJesteś już w grze!" to {_p}
         else:
             send "&cNie możesz dołączyć do tej gry." to {_p}
 function eventStart(p: player, game: text):
-    if game is "spleef":
+    if {_game} is "spleef":
         set {_menu} to a new chest inventory with 4 row named "{@eventMenuNameStart}"
         set slot 11 of {_menu} to snowball named "<#55FF55>Spleef!"
         open {_menu} to {_p}
