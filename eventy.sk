@@ -6,7 +6,7 @@ options:
     spleefTpWaiting: location(0.5, 75, 0.5, world "world")
 
 on load:
-    set {events::status::spleef} to "waiting"
+    set {events::status::spleef} to "off"
 command /event [<text>]:
     trigger:
         eventMenuMain(event-player)
@@ -43,8 +43,8 @@ function eventChoice(p: player, game: text):
         if {events::status::%{_game}%} is "off":
             eventMenuStart({_p}, "spleef")
             stop
-        if {effects::status::%{_game}%} is "waiting":
-            eventTp({_p}, "spleef", {effects::status::%{_game}%})
+        if {events::status::%{_game}%} is "waiting":
+            eventTp({_p}, "spleef", {events::status::%{_game}%})
             stop
         if {events::status::%{_game}%} is "playing":
             send "&cArena już trwa!" to {_p}
@@ -60,6 +60,22 @@ function eventTp(p: player, game: text, status: text):
 function eventMenuStart(p: player, game: text):
     if {_game} is "spleef":
         set {_menu} to a new chest inventory with 4 row named "{@eventMenuNameStart}"
-        set slot 11 of {_menu} to snowball named "<#55FF55>Spleef!"
-        set slot 15 of {_menu} to scute named "<#55FF55>Spleef!"
+        set slot 11 of {_menu} to snowball named "<#FF5555>Nie chce wydawać {@spleefPrice} monet!"
+        set slot 15 of {_menu} to turtle scute named "<#55FF55>Rozpocznij mecz za {@spleefPrice} monet!"
         open {_menu} to {_p}
+on inventory click:
+    name of event-inventory is "{@eventMenuNameStart}" # Make sure it's our menu.
+    if event-slot is 11:
+        close event-player's inventory
+        send "&cNie zdecydowałeś się na grę w Spleef." to event-player
+    if event-slot is 15:
+        if event-player's balance < {@spleefPrice}:
+            close event-player's inventory
+            send "&cNie masz wystarczająco monet na grę w Spleef!" to event-player
+            stop
+        reduce event-player's balance by {@spleefPrice}
+        close event-player's inventory
+        set {events::status::spleef} to "waiting"
+        eventTp(event-player, "spleef", "waiting")
+        send "&aZapłaciłeś {@spleefPrice} monet i dołączyłeś do gry Spleef!" to event-player
+        send "&e%event-player% &auruchomił speef, dołącz przez /event!" to all players
