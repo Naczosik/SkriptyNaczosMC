@@ -2,8 +2,11 @@ options:
     eventMenuNameMain: &8Eventy
     eventMenuNameChoice: &8Wybierz grę
     eventMenuNameStart: &8Start gry
-
     spleefPrice: 30
+    spleefTpWaiting: location(0.5, 75, 0.5, world "world")
+
+on load:
+    set {events::status::spleef} to "waiting"
 command /event [<text>]:
     trigger:
         eventMenuMain(event-player)
@@ -29,22 +32,34 @@ function eventMenuChoice(p: player):
     open {_menu} to {_p}
 function eventEligibleLore(p: player, game: text) :: text:
     if {_game} is "spleef":
-        if {events::status::%{_game}%} is "waiting":
-            return "<#55FF55>Kliknij, aby dołączyć za {@spleefPrice} monet!"
+        if {events::status::%{_game}%} is "off":
+            return "<#55FF55>Kliknij, aby włączyć za {@spleefPrice} monet!"
         if {events::status::%{_game}%} is "playing":
             return "<#FF5555>Jesteś już w grze!"
         else:
             return "<#AAAAAA>Nie możesz dołączyć do tej gry."
 function eventChoice(p: player, game: text):
     if {_game} is "spleef":
-        if {events::status::%{_game}%} is "waiting":
-            eventStart({_p}, "spleef")
+        if {events::status::%{_game}%} is "off":
+            eventMenuStart({_p}, "spleef")
+            stop
+        if {effects::status::%{_game}%} is "waiting":
+            eventTp({_p}, "spleef", {effects::status::%{_game}%})
+            stop
         if {events::status::%{_game}%} is "playing":
-            send "&cJesteś już w grze!" to {_p}
+            send "&cArena już trwa!" to {_p}
+            stop
         else:
             send "&cNie możesz dołączyć do tej gry." to {_p}
-function eventStart(p: player, game: text):
+            stop
+function eventTp(p: player, game: text, status: text):
+    if {_game} is "spleef":
+        if {_status} is "waiting":
+            teleport {_p} to {@spleefTpWaiting}
+            send "&aDołączyłeś do gry Spleef!" to {_p}
+function eventMenuStart(p: player, game: text):
     if {_game} is "spleef":
         set {_menu} to a new chest inventory with 4 row named "{@eventMenuNameStart}"
         set slot 11 of {_menu} to snowball named "<#55FF55>Spleef!"
+        set slot 15 of {_menu} to scute named "<#55FF55>Spleef!"
         open {_menu} to {_p}
