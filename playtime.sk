@@ -1,0 +1,32 @@
+#skript na otrzymywanie siana przez gracza na podstawie aktywności przez ostatnie 10 minut, skalowane od tego ile zniszczył bloków, postawił bloków lub zabił mobów, maksymalnie mnożnik może wynosić 300% podstawowej kwoty
+options:
+    standardReward: 100
+    maxMultiplier: 3
+on join:
+    if {timeismoney::%player%} is set:
+        wait {timeismoney::%player%}
+        givemoney(event-player)
+    while player is online:
+        set {timeismoney::%player%} to now
+        wait 10 minutes
+        if player is online:
+            givemoney(event-player)
+on quit:
+    set {timeismoney::%player%} to (now - {timeismoney::%player%})
+givemoney(p: player):
+    set {_multiplier} to ({timeismoney::breaks::%{_p}%} + {timeismoney::places::%{_p}%} + {timeismoney::kills::%{_p}%}) / 100
+    if {_multiplier} > {@maxMultiplier}:
+        set {_multiplier} to {@maxMultiplier} -1 #ponieważ mnożnik jest liczony jako 1 + {_multiplier}, więc odejmujemy 1 od maksymalnego mnożnika, aby nie przekroczyć go
+    set {_reward} to round({@standardReward} * (1 + {_multiplier}))
+    add {_reward} to {_p}'s balance
+    send "Otrzymałeś &e%{_reward}% &amonet za swoją aktywność!" to {_p}
+    delete {timeismoney::breaks::%{_p}%}
+    delete {timeismoney::places::%{_p}%}
+    delete {timeismoney::kills::%{_p}%}
+
+on break:
+    add 1 to {timeismoney::breaks::%player%}    
+on place:
+    add 1 to {timeismoney::places::%player%}
+on kill:
+    add 1 to {timeismoney::kills::%player%}

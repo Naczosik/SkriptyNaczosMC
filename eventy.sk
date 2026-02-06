@@ -1,16 +1,40 @@
+#logika całego skriptu:
+#komenda /event odpala eventMainMenu
+#z MainMenu przechodzi do MenuChoice z listą gier
+#lub do MenuAchievements, gdzie można zobaczyć swoje osiągnięcia w eventach -> w przyszłości
+#z MenuChoice przechodzi do MenuStart, gdzie można potwierdzić chęć gry i zapłacić (w MenuChoice) lub dołączyć do oczekującej gry
+#W MenuStart gracz decyduje czy chce odpalić
+#jeśli odpali, to sprawdzamy czy ma wystarczająco monet, jeśli tak, to zmieniamy status gry na "waiting" i teleportujemy gracza do strefy oczekiwania
+#jeśli dołączył do oczekującej gry, to dodajemy go do listy graczy i teleportujemy do strefy oczekiwania
+
+
+#każda minigra ma zmienne:
+# events::status::NAZWA - off/waiting/playing
+# events::players::NAZWA::* - lista graczy w spleefie
+# events::statusmsg::NAZWA - wiadomość statusowa dla spleefa (np. "Czekamy na graczy... (1/4)")
+# oraz region NAZWARegion
+
+
 options:
+    eventWorld: eventy
     eventMenuNameMain: &8Eventy
     eventMenuNameChoice: &8Wybierz grę
     eventMenuNameStart: &8Start gry
+    eventNormalWorldLoc: location(0.5, 75, 0.5, world "world")
+    spleefMinPlayers: 2
     spleefPrice: 30
     spleefTpWaiting: location(0.5, 75, 0.5, world "world")
+    spleefTpSpec: location(0.5, 80, 0.5, world "world")
 
 on load:
     set {events::status::spleef} to "off"
+    loop {event}
+#menu główne
+
+
 command /event [<text>]:
     trigger:
         eventMenuMain(event-player)
-#menu główne
 on inventory click:
     name of event-inventory is "{@eventMenuNameMain}" # Make sure it's our menu.
     if event-slot is 11:
@@ -21,7 +45,9 @@ function eventMenuMain(p: player):
     set slot 11 of {_menu} to compass named "<#FCC729>Wybierz grę!"
     open {_menu} to {_p}
 #menu wyboru gry
-on inventory click:
+
+
+on inventory click: 
     name of event-inventory is "{@eventMenuNameChoice}" # Make sure it's our menu.
     if event-slot is 11:
         eventChoice(event-player, "spleef")
@@ -52,11 +78,9 @@ function eventChoice(p: player, game: text):
         else:
             send "&cNie możesz dołączyć do tej gry." to {_p}
             stop
-function eventTp(p: player, game: text, status: text):
-    if {_game} is "spleef":
-        if {_status} is "waiting":
-            teleport {_p} to {@spleefTpWaiting}
-            send "&aDołączyłeś do gry Spleef!" to {_p}
+#menu startu gry
+
+
 function eventMenuStart(p: player, game: text):
     if {_game} is "spleef":
         set {_menu} to a new chest inventory with 4 row named "{@eventMenuNameStart}"
@@ -75,7 +99,114 @@ on inventory click:
             stop
         reduce event-player's balance by {@spleefPrice}
         close event-player's inventory
-        set {events::status::spleef} to "waiting"
-        eventTp(event-player, "spleef", "waiting")
-        send "&aZapłaciłeś {@spleefPrice} monet i dołączyłeś do gry Spleef!" to event-player
-        send "&e%event-player% &auruchomił speef, dołącz przez /event!" to all players
+        eventEnable("spleef", event-player)
+        eventTp(event-player, "spleef", {events::status::spleef})
+function eventEnable(game: text, p: player):
+    if {events::status::%{_game}%} is not "off":
+        send "&cGra już się rozpoczęła!" to {_p}
+        stop
+    if {_game} is "spleef":
+        set {events::status::%{_game}%} to "waiting"
+        send "&aZapłaciłeś {@spleefPrice} monet i dołączyłeś do gry Spleef!" to {_p}
+        send "&e%{_p}% &auruchomił speef, dołącz przez /event!" to all players
+        set {events::statusmsg::%{_game}%} to "&eCzekamy na graczy... (&a%size of {events::players::spleef::*}%/&a{@spleefMinPlayers})"
+        while {events::status::%{_game}%} is "waiting":
+            wait 1 second
+            if size of {events::players::spleef::*} >= {@spleefMinPlayers}:
+                eventStart("spleef")
+                stop
+            else:
+                loop {events::players::spleef::*}:
+                    send "&cNiewystarczająca liczba graczy, aby rozpocząć grę Spleef." to loop-player
+function eventTp(p: player, game: text, status: text):
+    if {_game} is "spleef":
+        if {_status} is "waiting":
+            add {_p} to {events::players::spleef::*}
+            teleport {_p} to {@spleefTpWaiting}
+            send "&aDołączyłeś do gry Spleef!" to {_p}
+        else:
+            send "&cNie możesz dołączyć do tej gry." to {_p}
+            stop
+
+function eventStart(game: text):
+    if {_game} is "spleef":
+        loop {@startingCountdown} times:
+            if size of {events::players::spleef::*} < {@spleefMinPlayers}:
+                set {events::status::%{_game}%} to "waiting"
+                send "&cNiewystarczająca liczba graczy, aby rozpocząć grę Spleef." to all players
+                stop
+            set {events::statusmsg::%{_game}%} to "&eGra rozpocznie się za &a%{@startingCountdown} - loop-index% &esekund!"
+            wait 1 second
+        set {events::status::%{_game}%} to "playing"
+        loop {events::players::spleef::*}:
+            clear loop-player's inventory
+            give loop-player 1 iron shovel
+            set loop-player's selected hotbar slot to slot 0 of loop-player
+        send "&aGra Spleef się rozpoczęła!" to all players
+
+
+on projectile hit:
+    #spleef - snieżka niszczy bloki śniegu
+    "%region at event-block%" contains "spleefRegion"
+    event-world is "{@eventWorld}"
+    event-projectile is snowball
+    event-block is snow block
+    {events::status::spleef} is "playing"
+    set event-block to air
+
+#zabezpieczenie niszczenia przed/po rozgrywce
+on break of snow block:
+    "%region at event-block%" contains "spleefRegion"
+    event-world is "{@eventWorld}"
+    {events::status::spleef} is not "playing"
+    cancel event
+#zabezpieczenie niszczenia innych bloków
+on break:
+    "%region at event-block%" contains "spleefRegion"
+    event-world is "{@eventWorld}"
+    cancel event
+    event-block is not snow:
+        cancel event
+on break of snow block:
+    #spleef - rozkopywanie
+    "%region at event-block%" contains "spleefRegion"
+    event-world is "{@eventWorld}"
+    {events::status::spleef} is "playing"
+    add 1 snowball to player's inventory 
+    cancel event
+    set event-block to air
+#wyjście z serwera
+on quit:
+    event-world is "{@eventWorld}"
+    if "%region at player%" contains "spleefRegion":
+        if eventQuitterIsPlaying("spleef", event-player) isn't true:
+            stop
+        teleport event-player to {spleef::tp::spec}
+        eventCountPlayers("spleef", event-player)
+on join:
+    event-world is {@eventWorld}
+    teleport event-player to {@eventNormalWorldLoc}
+    send "Opuściłeś serwer podczas eventu, zostałeś przeniesiony na spawn." to event-player
+eventCountPlayers(game: text, p: player):: player:
+    if {_game} is "spleef":
+        remove {_p} from {events::players::spleef::*}
+        if size of {events::players::spleef::*} = 1:
+            loop {event::players::spleef::*}:
+                set{_winner} to loop-value
+                exit loop
+            add 1 to {event::winners::spleef::%{_winner}%}
+            if {event::winners::spleef::%{_winner}%} = 1:        
+                send "&aGracz &e%{_winner}% &awygrał grę Spleef po raz pierwszy w karierze!" to all players
+            if {event::winners::spleef::%{_winner}%} = 10:
+                send "&aGracz &e%{_winner}% &awygrał grę Spleef po raz dziesiąty! Otrzyma za to 100 monet!" to all players
+                send "&eOdbierz swoją nagrodę u NPC Naczos!" to {_winner}
+            set {events::status::%{_game}%} to "off"
+            clear {events::players::spleef::*}
+            loop all players:
+                if "%region at loop-player%" contains "spleefRegion":
+                    teleport loop-player to {@worldNormalWorldLoc}
+                    send "&aGra Spleef się zakończyła! Gratulacje dla &e%{_winner}%&a!" to loop-player
+eventQuitterIsPlaying(game: text, p: player):
+    loop {event::player::%{_game}%} :: boolean :
+        if {_p} is loop-value:
+            return true
