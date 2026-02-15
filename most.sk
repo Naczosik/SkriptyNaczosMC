@@ -1,8 +1,9 @@
 options:
-    firstlinemost: [most]
+    #shared
     minigamesworld: event
     percentage: procent
     timeset: czas
+    infosign: info
     seteventsign: ustawevent
     eventmessage: &aEVENT %{_event}%, TEPNIJ NA SPAWNA I /EVENT
     locationset: Ustawiono
@@ -10,31 +11,54 @@ options:
     startingin: Start za
     startingtime: 3
     startmessage: &aSTART!
-    bridgedepth: 5
-    depthofcopy: 20
-    loseregion: most_lost
     notstarting: &cZaden event nie startuje!
-    tpspawn: TPSPAWN
-    tpevent: EVENT
-    firstlinekolorki: [kolorki]
-    firstlinetntrun: [tntrun]
-    wrongplaceeventcommand: &cKomenda dziala tylko na spawnie lub na swiecie eventowym!
-    blocknotfound: &cBrak bloku w patternie!
-    countmaps: policzmapy
-    noplayersleft: &cDziwna sprawa, brak graczy...
-    firstlineox: [ox]
-    falseline: falsz
-    trueline: prawda
     annoucewinner: &fEvent %{_gametype}% wygrał
     playersleftmsg0: &cOdpadł
     playersleftmsg1: &cPozostało
     playersleftmsg2: graczy...
+    joinmsg: &adołączył na /event!
+    infomsg: <##00ff00>Jak grać?
+    winnersign: zwyciezca
+    #kolorki
+    firstlinekolorki: [kolorki]
+    blocknotfound: &cBrak bloku w patternie!
+    kolorkiinfo: Stań na bloku, który otrzymasz do ręki! Ostatnia osoba na platformie wygrywa!
+    warning: &cUwaga... czas
+    #most
+    firstlinemost: [most]
+    infomost: Jak grać?
+    bridgedepth: 5
+    depthofcopy: 20
+    loseregion: most_lost
+    tpspawn: TPSPAWN
+    tpevent: EVENT
+    mostinfo: Przebiegnij na drugą strone mapy w określonym czasie! Uwaga dziury! Ostatnia osoba na mapie wygrywa!
+    #tntrun
+    firstlinetntrun: [tntrun]
+    wrongplaceeventcommand: &cKomenda dziala tylko na spawnie lub na swiecie eventowym!
+    countmaps: policzmapy
+    noplayersleft: &cDziwna sprawa, brak graczy...
+    #ox
+    firstlineox: [ox]
+    falseline: falsz
+    trueline: prawda
+    #spleef
     firstlinespleef: [spleef]
     spleefstartingmsg: spleef startuje za 5 sekund
     resetmapsign: reset
     armageddonmsg: &cNISZCZENIE BLOCKÓW!
     armageddonsign: armageddon
-    joinmsg: &adołączył na /event!
+    spleefinfo: Podkopuj innych graczy, ostatni gracz na platformie wygrywa! Uwaga można rzucać śnieżkami oraz tworzyć bloki śniegu...
+    #sumo
+    firstlinesumo: [sumo]
+    sumostartingmsg: sumo startuje za 5 sekund
+    sumomapreset: Odbudowano bloki!
+    spawnstick: zrespkijek
+    stickdroped: &aWyrzucono wzmocniony kij na środku mapy!
+    sticklvl: kij
+    changestick: dajkija
+    stickupgraded: &aUlepszono kije wszystkich do &f%{_lvl}% &apoziomu
+    sumoinfo: Spychaj innych graczy z planszy, czasami może pojawić się lepszy kijek na środku mapy!
 ##===================================ogolne===================================
 command /event:
     trigger:
@@ -65,15 +89,19 @@ on rightclick on stone button:
         send "{@blocknotfound}" to event-player
         stop
     delete {kolorki::starting}
+    set {_t} to line 3 of block at {kolorki::tp::timesign} parsed as number
+    play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+    send "{@warning}: %{_t}%" to all players in world "{@minigamesworld}"
+    wait 1 second
     loop all players in world "{@minigamesworld}":
         clear loop-player's inventory
         loop 9 times:
             set slot loop-number - 1 of loop-player's inventory to {_b}
-    set {_t} to line 3 of block at {kolorki::tp::timesign} parsed as number
     if {_t} is not an integer:
         send "&c%{_t}%..."  to players in world "{@minigamesworld}"
         set {_fracture} to floor({_t})
         set {_fracture} to "%{_t} - {_fracture}% seconds"
+        play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
         wait {_fracture} parsed as timespan
         #reduce {_t} by 0.5 
         set {_t} to floor({_t})
@@ -111,7 +139,6 @@ on rightclick on sign:
         set {_l} to true
         set {_lvls} to 0
         set {_d} to {@depthofcopy}
-        
         while {_l} is true:
             if block {_d} + {_lvls} under the block at {kolorki::tp::kolorki1} is not air:
                 add 1 to {_lvls}
@@ -127,6 +154,11 @@ on rightclick on sign:
             set {_p} to 4
         set line 3 of clicked block to "%{_p}%"
         stop
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #info
+    if line 2 of clicked block is "{@infosign}":
+        send "{@infomsg}" and "{@kolorkiinfo}" to all players in world "{@minigamesworld}"
 command /kolorkiadmin [<text>]:
     #kolorki - komenda admina
     permission: minigry.admin
@@ -258,6 +290,9 @@ on rightclick on sign:
             if loop-block is air:
                 set loop-block to barrier
         stop
+    #info
+    if line 2 of clicked block is "{@infosign}":
+        send "{@infomsg}" and "{@mostinfo}" to all players in world "{@minigamesworld}"
 
 command /mostadmin [<text>]:
     #most - komenda admina
@@ -364,12 +399,6 @@ on break of snow block:
     event-world is "{@minigamesworld}"
     {spleef::on} is not set
     cancel event
-on break:
-    "%region at event-block%" contains "spleef_gra"
-    event-world is "{@minigamesworld}"
-    cancel event
-    event-block is not snow:
-        cancel event
 on break of snow block:
     #spleef - rozkopywanie
     "%region at event-block%" contains "spleef_gra"
@@ -379,6 +408,30 @@ on break of snow block:
     add 1 snowball to player's inventory 
     cancel event
     set event-block to air
+on break:
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    cancel event
+    event-block is not snow:
+        cancel event
+on place of snow block:
+    "%region at event-block%" contains "spleef_gra"
+    event-world is "{@minigamesworld}"
+    {spleef::on} is true
+    block under event-block is not bedrock
+    cancel event
+on quit:
+    #spleef - wyjscie
+    event-world is "{@minigamesworld}"
+    if "%region at player%" contains "spleef_gra":
+        teleport event-player to {spleef::tp::spec}
+        countplayers("spleef", event-player)
+on walk on bedrock:
+    #spleef - odpadniecie
+    "%region at player%" contains "spleef_gra"
+    clear player's inventory
+    teleport player to {spleef::tp::spec}
+    countplayers("spleef", event-player)
 on rightclick on sign:
     #spleef - tablica
     line 1 of clicked block is "{@firstlinespleef}"
@@ -425,24 +478,11 @@ on rightclick on sign:
             if "%region at loop-player%" contains "spleef_gra":
                 give loop-player 1 iron shovel
                 set loop-player's selected hotbar slot to slot 0 of loop-player
-on place of snow block:
-    "%region at event-block%" contains "spleef_gra"
-    event-world is "{@minigamesworld}"
-    {spleef::on} is true
-    block under event-block is not bedrock
-    cancel event
-on quit:
-    #spleef - wyjscie
-    event-world is "{@minigamesworld}"
-    if "%region at player%" contains "spleef_gra":
-        teleport event-player to {spleef::tp::spec}
-        countplayers("spleef", event-player)
-on walk on bedrock:
-    #spleef - odpadniecie
-    "%region at player%" contains "spleef_gra"
-    clear player's inventory
-    teleport player to {spleef::tp::spec}
-    countplayers("spleef", event-player)
+    #info
+    if line 2 of clicked block is "{@infosign}":
+        send "{@infomsg}" and "{@spleefinfo}" to all players in world "{@minigamesworld}"
+
+
 command /spleefadmin [<text>]:
     #spleef - komenda admina
     permission: minigry.admin
@@ -581,6 +621,111 @@ command /oxadmin [<text>]:
         if arg-1 is "copy":
             loop blocks within {ox::tp::ox1} and {ox::tp::ox2}:
                 set block 30 blocks under loop-block to loop-block
+#===================================sumo===================================
+on rightclick on sign:
+    #sumo - tablica
+    line 1 of clicked block is "{@firstlinesumo}"
+    if player's world isn't "{@minigamesworld}":
+        stop
+    cancel event
+    tpspawn("{@tpspawn}", event-block, event-player)
+    #tp na event
+    if line 2 of clicked block is "{@tpevent}":
+        tpevent(event-player)
+    #wlaczenie eventu
+    if line 2 of clicked block is "{@seteventsign}":
+        set {_event} to "SUMO"
+        send "{@eventmessage}" to all players
+        set {sumo::starting} to true
+        delete {sumo::on}
+        loop blocks within {sumo::tp::sumo1} and {sumo::tp::sumo2}:
+            set loop-block to block 30 under the loop-block
+        loop all players:
+            if "%region at loop-player%" contains "sumo_gra":
+                clear loop-player's inventory
+    #armageddon
+    if line 2 of clicked block is "{@armageddonsign}":
+        play sound "entity.zombie.attack_wooden_door" at volume 0.6 for all players in world "{@minigamesworld}"
+        send "{@armageddonmsg}" to all players in world "{@minigamesworld}"
+        wait 1 second
+        loop blocks within {sumo::tp::sumo1} and {sumo::tp::sumo2alt}:
+            send "test" to event-player
+            if loop-block is not air:
+                chance of 5%:
+                    set loop-block to air
+                    set block 1 above loop-block to air
+                    #set block loop-number under loop-block to air
+    #reset mapy
+    if line 2 of clicked block is "{@resetmapsign}":
+        loop blocks within {sumo::tp::sumo1} and {sumo::tp::sumo2}:
+            set loop-block to block 30 under the loop-block
+        send "{@sumomapreset}" to all players in world "{@minigamesworld}"
+    if line 2 of clicked block is "{@startsign}":
+        loop blocks within {sumo::tp::sumo1} and {sumo::tp::sumo2}:
+            set loop-block to block 30 under the loop-block
+        send "{@sumostartingmsg}" to all players
+        loop 5 times:
+            send "&c%5 - loop-number + 1%..."  to players in world "{@minigamesworld}"
+            play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+            wait 1 second
+        delete {sumo::starting}
+        loop all players:
+            if "%region at loop-player%" contains "sumo_gra":
+                close loop-player's inventory
+                clear loop-player's inventory
+                give loop-player 1 stick of knockback 1
+                set loop-player's selected hotbar slot to slot 0 of loop-player
+        set {sumo::on} to true
+    if line 2 of clicked block is "{@spawnstick}":
+        set {_lvl} to line 3 of block at {sumo::tp::spawnsticksign} parsed as number
+        set {_item} to "stick of knockback %{_lvl}%" parsed as item
+        drop {_item} at {sumo::tp::spawnstick}
+        send "{@stickdroped}" to players in world "{@minigamesworld}"
+        play sound "block.note_block.pling" at volume 0.3 for all players in world "{@minigamesworld}"
+    if line 2 of clicked block is "{@changestick}":
+        set {_lvl} to line 3 of block at {sumo::tp::spawnsticksign} parsed as number
+        set {_item} to "stick of knockback %{_lvl}%" parsed as item
+        loop all players:
+            if "%region at loop-player%" contains "sumo_gra":
+                clear loop-player's inventory
+                give loop-player {_item}
+                set loop-player's selected hotbar slot to slot 0 of loop-player
+        send "{@stickupgraded}" to players in world "{@minigamesworld}"
+        play sound "entity.player.levelup" at volume 0.6 for all players in world "{@minigamesworld}"
+    if line 2 of clicked block is "{@sticklvl}":
+        set {_p} to line 3 of clicked block parsed as number
+        set {_p} to {_p} + 1
+        if {_p} > 10:
+            set {_p} to 1
+        set line 3 of clicked block to "%{_p}%"
+        stop
+    if line 2 of clicked block is "{@winnersign}":
+        send "nie ma tego jeszcze xd pisze to 17.01.2025" to event-player
+    #info
+    if line 2 of clicked block is "{@infosign}":
+        send "{@infomsg}" and "{@sumoinfo}" to all players in world "{@minigamesworld}"
+on damage:
+    "%region at attacker%" contains "sumo"
+    {sumo::on} is not set
+    cancel event
+
+on walk on black stained glass:
+    #sumo - przegrany normalnie
+    "%region at player%" contains "sumo"
+    teleport player to {sumo::tp::spec}
+    clear player's inventory
+
+command /sumoadmin [<text>]:
+    #sumo - komenda admina
+    permission: minigry.admin
+    trigger:
+        if arg-1 is "sumo1" or "sumo2" or "tpevent" or "spec" or "spawnstick" or "sumo2alt" or "spawnsticksign":
+            set {sumo::tp::%arg-1%} to player's location
+            send "{@locationset} %arg-1%"
+            stop
+        if arg-1 is "copy":
+            loop blocks within {sumo::tp::sumo1} and {sumo::tp::sumo2}:
+                set block 30 blocks under loop-block to loop-block
 #funkcje
 function countplayers(gametype: string, pl: player):
     set {_c} to 0
@@ -634,6 +779,11 @@ function tpevent(p: player):
         stop
     if {spleef::starting} is true:
         teleport {_p} to {spleef::tp::tpevent}
+        clear {_p}'s inventory
+        send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
+        stop
+    if {sumo::starting} is true:
+        teleport {_p} to {sumo::tp::tpevent}
         clear {_p}'s inventory
         send "&f%prefix of {_p}%%{_p}% {@joinmsg}" to all players
         stop

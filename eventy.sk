@@ -12,7 +12,7 @@
 # events::status::NAZWA - off/waiting/playing
 # events::players::NAZWA::* - lista graczy w spleefie
 # events::statusmsg::NAZWA - wiadomość statusowa dla spleefa (np. "Czekamy na graczy... (1/4)")
-# oraz region NAZWARegion
+# oraz region NAZWARegion oraz NAZWALostRegion or NAZWASpecRegion
 
 
 options:
@@ -94,15 +94,23 @@ on inventory click:
         close event-player's inventory
         send "&cNie zdecydowałeś się na grę w Spleef." to event-player
     if event-slot is 15:
+        if {events::status::%{_game}%} is "waiting":
+            eventTp(event-player, "spleef", {events::status::spleef})
+            send "&aDołączyłeś za darmo ponieważ w międzyczasie ktoś inny rozpoczął grę!" to event-player
+            stop
+        if {events::status::%{_game}%} is "playing":
+            send "&cArena już trwa!" to event-player
+            stop 
         if event-player's balance < {@spleefPrice}:
             close event-player's inventory
             send "&cNie masz wystarczająco monet na grę w Spleef!" to event-player
             play sound "entity.villager.no" with volume 1 and pitch 1 to event-player
             stop
-        reduce event-player's balance by {@spleefPrice}
-        close event-player's inventory
         eventEnable("spleef", event-player)
+        reduce event-player's balance by {@spleefPrice}
         eventTp(event-player, "spleef", {events::status::spleef})
+        close event-player's inventory
+
 function eventEnable(game: text, p: player):
     if {events::status::%{_game}%} is not "off":
         send "&cGra już się rozpoczęła!" to {_p}
@@ -113,7 +121,7 @@ function eventEnable(game: text, p: player):
         send "&e%{_p}% &auruchomił speef, dołącz przez /event!" to all players
         set {events::statusmsg::%{_game}%} to "&eCzekamy na graczy... (&a%size of {events::players::spleef::*}%/&a{@spleefMinPlayers})"
         while {events::status::%{_game}%} is "waiting":
-            wait 1 second
+            wait 5 seconds
             if size of {events::players::spleef::*} >= {@spleefMinPlayers}:
                 eventStart("spleef")
                 stop
@@ -149,34 +157,39 @@ function eventStart(game: text):
 
 on projectile hit:
     #spleef - snieżka niszczy bloki śniegu
+    #zasady ogólne
     "%region at event-block%" contains "spleefRegion"
     event-world is "{@eventWorld}"
+    #zasady - status
+    {events::status::spleef} is "playing"
     event-projectile is snowball
     event-block is snow block
-    {events::status::spleef} is "playing"
     set event-block to air
 
-#zabezpieczenie niszczenia przed/po rozgrywce
 on break of snow block:
+    #zabezpieczenie niszczenia przed/po rozgrywce
+    #zasady ogólne
     "%region at event-block%" contains "spleefRegion"
     event-world is "{@eventWorld}"
+    #zasady - status
     {events::status::spleef} is not "playing"
     cancel event
-#zabezpieczenie niszczenia innych bloków
-on break:
-    "%region at event-block%" contains "spleefRegion"
-    event-world is "{@eventWorld}"
-    cancel event
-    event-block is not snow:
-        cancel event
 on break of snow block:
     #spleef - rozkopywanie
+    #zasady ogólne
     "%region at event-block%" contains "spleefRegion"
     event-world is "{@eventWorld}"
+    #zasady - status
     {events::status::spleef} is "playing"
     add 1 snowball to player's inventory 
     cancel event
     set event-block to air
+on break:
+    #zasady ogólne
+    "%region at event-block%" contains "spleefRegion"
+    event-world is "{@eventWorld}"
+    event-block is not snow
+    cancel event
 #wyjście z serwera
 on quit:
     event-world is "{@eventWorld}"
@@ -189,9 +202,28 @@ on join:
     event-world is "{@eventWorld}"
     teleport event-player to {@eventNormalWorldLoc}
     send "Opuściłeś serwer podczas eventu, zostałeś przeniesiony na spawn." to event-player
+on enter region:
+    #most - przegrany normalnie
+    wait 1 tick
+    if "%region at player%" contains "spleefLostRegion":
+        teleport player to {events::tp::spleef::spec}
+        eventCountPlayers("spleef", event-player)
+on world change:
+    event-world is "{@eventWorld}"
+    if "%region at player%" contains "spleefRegion":
+        send "Opuściłeś event." to event-player
+        eventCountPlayers("spleef", event-player)
+
 function eventCountPlayers(game: text, p: player) :: player:
     if {_game} is "spleef":
-        remove {_p} from {events::players::spleef::*}
+        delete {events::players::spleef::*}
+        loop all players:
+            if region at location of loop-player contains "spleefRegion":
+                add loop-player to {events::players::spleef::*}
+        if {events::status::%{_game}%} is "playing":
+        if size of {events::players::spleef::*} = 0:
+                set {events::status::%{_game}%} to "off"
+                send "&aGra Spleef bez graczy?" to all players
         if size of {events::players::spleef::*} = 1:
             loop {events::players::spleef::*}:
                 set {_winner} to loop-value
@@ -205,7 +237,7 @@ function eventCountPlayers(game: text, p: player) :: player:
             set {events::status::%{_game}%} to "off"
             clear {events::players::spleef::*}
             loop all players:
-                if region at location of loop-player contains "spleefRegion":
+                if region at location of loop-player contains "spleefRegion" or "spleefSpecRegion":
                     teleport loop-player to {@eventNormalWorldLoc}
                     send "&aGra Spleef się zakończyła! Gratulacje dla &e%{_winner}%&a!" to loop-player
 function eventQuitterIsPlaying(game: text, p: player) :: boolean:
